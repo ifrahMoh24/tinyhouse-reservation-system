@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Property Details - TinyHouse</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2 id="propertyName">Loading...</h2>
+    <p id="propertyLocation"></p>
+    <div id="propertyImage" style="margin-bottom: 20px;"></div>
+    <p><strong>Price:</strong> ₺<span id="propertyPrice"></span>/night</p>
+
+    <h3>Make a Reservation</h3>
+    <form id="reservationForm">
+      <div class="form-group">
+        <label>Check-in Date:</label>
+        <input type="date" id="checkIn" required />
+      </div>
+      <div class="form-group">
+        <label>Check-out Date:</label>
+        <input type="date" id="checkOut" required />
+      </div>
+      <div class="form-group">
+        <label>Guests:</label>
+        <select id="guests">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </div>
+      <button class="btn-primary btn-large" type="submit">Reserve</button>
+    </form>
+
+    <p id="message" class="success-message"></p>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const propertyId = params.get('id');
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+
+    // Load property details
+    async function loadProperty() {
+      try {
+        const res = await fetch(`http://localhost:3001/properties/${propertyId}`);
+        const property = await res.json();
+
+        document.getElementById('propertyName').textContent = property.title;
+        document.getElementById('propertyLocation').textContent = property.city + ', ' + property.country;
+        document.getElementById('propertyPrice').textContent = property.price_per_night;
+        document.getElementById('propertyImage').innerHTML =
+          `<img src="${property.image_url}" alt="${property.title}" style="max-width:100%; border-radius: 12px;">`;
+      } catch (err) {
+        document.getElementById('propertyName').textContent = 'Failed to load property';
+        console.error(err);
+      }
+    }
+
+    // Handle reservation
+    document.getElementById('reservationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const check_in_date = document.getElementById('checkIn').value;
+      const check_out_date = document.getElementById('checkOut').value;
+      const number_of_guests = document.getElementById('guests').value;
+
+      const res = await fetch(`http://localhost:3001/reservations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          property_id: propertyId,
+          check_in_date,
+          check_out_date,
+          number_of_guests
+        })
+      });
+
+      const data = await res.json();
+      const msgBox = document.getElementById('message');
+      msgBox.textContent = res.ok ? 'Reservation successful!' : (data.message || 'Failed to reserve.');
+    });
+
+    loadProperty();
+  </script>
+</body>
+</html>

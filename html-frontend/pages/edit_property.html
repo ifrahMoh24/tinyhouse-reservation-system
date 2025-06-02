@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Edit Property - TinyHouse</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Edit Property</h2>
+    <form id="editForm">
+      <div class="form-group">
+        <label>Property Name:</label>
+        <input type="text" id="name" required />
+      </div>
+      <div class="form-group">
+        <label>Location:</label>
+        <input type="text" id="location" required />
+      </div>
+      <div class="form-group">
+        <label>Price (₺ per night):</label>
+        <input type="number" id="price" required />
+      </div>
+      <div class="form-group">
+        <label>Description:</label>
+        <textarea id="description" rows="4" required></textarea>
+      </div>
+      <div class="form-group">
+        <label>Status:</label>
+        <select id="status">
+          <option value="active">Active</option>
+          <option value="passive">Passive</option>
+        </select>
+      </div>
+      <button class="btn-primary btn-large" type="submit">Save Changes</button>
+      <p id="message" class="success-message"></p>
+    </form>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams(window.location.search);
+    const propertyId = params.get('id');
+
+    if (!token || !propertyId) {
+      window.location.href = 'login.html';
+    }
+
+    async function loadProperty() {
+      const res = await fetch(`http://localhost:3001/properties/${propertyId}`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const property = await res.json();
+
+      document.getElementById('name').value = property.name;
+      document.getElementById('location').value = property.location;
+      document.getElementById('price').value = property.price;
+      document.getElementById('description').value = property.description;
+      document.getElementById('status').value = property.status;
+    }
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const location = document.getElementById('location').value;
+      const price = document.getElementById('price').value;
+      const description = document.getElementById('description').value;
+      const status = document.getElementById('status').value;
+
+      const res = await fetch(`http://localhost:5000/properties/${propertyId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ name, location, price, description, status })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById('message').textContent = 'Property updated successfully!';
+      } else {
+        document.getElementById('message').textContent = data.message || 'Update failed.';
+      }
+    });
+
+    loadProperty();
+  </script>
+</body>
+</html>

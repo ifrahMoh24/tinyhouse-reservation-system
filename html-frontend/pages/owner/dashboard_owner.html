@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Owner Dashboard - TinyHouse</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <button onclick="logout()" class="btn-secondary" style="float: right; margin-top: 1rem;">Logout</button>
+    <h2>📦 Welcome, Owner</h2>
+    <p>Manage your listings and reservations here.</p>
+
+    <h3>Your Listings</h3>
+    <div id="myListings"></div>
+
+    <h3>Incoming Reservations</h3>
+    <div id="incomingReservations"></div>
+  </div>
+
+  <script src="../js/logout.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    async function fetchListings() {
+      try {
+        const res = await fetch('http://localhost:3001/properties/owner/my-properties', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        document.getElementById('myListings').innerHTML = data.properties.map(p =>
+          `<div style="margin-bottom: 1rem;">
+            <b>${p.title}</b> — ${p.city}<br />
+            Total Bookings: ${p.total_bookings} | Revenue: ₺${p.total_revenue}<br />
+            <a href="edit_property.html?id=${p.property_id}" class="btn-secondary">Edit</a>
+          </div>`
+        ).join('');
+      } catch (err) {
+        console.error('Error loading listings:', err);
+      }
+    }
+
+    async function fetchIncomingReservations() {
+      try {
+        const res = await fetch('http://localhost:3001/reservations/owner', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        document.getElementById('incomingReservations').innerHTML = data.reservations.map(r =>
+          `<div>
+            ${r.tenant_first_name} ${r.tenant_last_name} reserved 
+            <b>${r.property_title}</b> from ${r.check_in_date} to ${r.check_out_date}
+          </div>`
+        ).join('');
+      } catch (err) {
+        console.error('Error loading reservations:', err);
+      }
+    }
+
+    fetchListings();
+    fetchIncomingReservations();
+  </script>
+</body>
+</html>

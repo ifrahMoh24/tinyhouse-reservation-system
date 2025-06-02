@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard - TinyHouse</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <button onclick="logout()" class="btn-secondary" style="float: right; margin-top: 1rem;">Logout</button>
+    <h2>🛠️ Admin Panel</h2>
+    <p>Full control over users, listings, and activity.</p>
+
+    <h3>All Users</h3>
+    <div id="users"></div>
+
+    <h3>System Properties</h3>
+    <div id="allProperties"></div>
+  </div>
+
+  <script src="../js/logout.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    async function fetchUsers() {
+      try {
+        const res = await fetch('http://localhost:3001/admin/users', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+
+        // Correct structure: data.users
+        document.getElementById('users').innerHTML = data.users.map(u =>
+          `<div>
+            ${u.first_name} ${u.last_name} — ${u.email} — ${u.user_role}
+          </div>`
+        ).join('');
+      } catch (err) {
+        console.error('Failed to load users:', err);
+      }
+    }
+
+    async function fetchAllProperties() {
+      try {
+        const res = await fetch('http://localhost:3001/admin/properties', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+
+        // Correct structure: data.properties
+        document.getElementById('allProperties').innerHTML = data.properties.map(p =>
+          `<div>
+            <b>${p.title}</b> (${p.owner_first_name} ${p.owner_last_name}) — ${p.city} — ₺${p.price_per_night}
+          </div>`
+        ).join('');
+      } catch (err) {
+        console.error('Failed to load properties:', err);
+      }
+    }
+
+    fetchUsers();
+    fetchAllProperties();
+  </script>
+</body>
+</html>

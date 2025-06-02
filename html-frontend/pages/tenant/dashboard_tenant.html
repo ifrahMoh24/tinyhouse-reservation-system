@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tenant Dashboard - TinyHouse</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <button onclick="logout()" class="btn-secondary" style="float: right; margin-top: 1rem;">Logout</button>
+    <h2>🎉 Welcome, Tenant</h2>
+    <p>Your reservations and recommended properties are below.</p>
+
+    <h3>My Reservations</h3>
+    <div id="reservations"></div>
+
+    <h3>Explore Properties</h3>
+    <div id="properties"></div>
+  </div>
+
+  <script src="../js/logout.js"></script>
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    async function fetchReservations() {
+      try {
+        const res = await fetch('http://localhost:3001/reservations/my', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+
+        const box = document.getElementById('reservations');
+        if (Array.isArray(data) && data.length > 0) {
+          box.innerHTML = data.map(r =>
+            `<div><b>${r.property_title}</b> | ${r.check_in_date} to ${r.check_out_date}</div>`
+          ).join('');
+        } else {
+          box.innerHTML = '<p>No reservations yet.</p>';
+        }
+      } catch (err) {
+        console.error('Failed to load reservations', err);
+      }
+    }
+
+    async function fetchProperties() {
+      try {
+        const res = await fetch('http://localhost:3001/properties');
+        const data = await res.json();
+
+        const box = document.getElementById('properties');
+        if (Array.isArray(data) && data.length > 0) {
+          box.innerHTML = data.map(p =>
+            `<div>
+              <h4>${p.title}</h4>
+              <p>${p.city} — ₺${p.price_per_night}/night</p>
+              <a href="../property.html?id=${p.property_id}" class="btn-primary">View</a>
+            </div>`
+          ).join('');
+        } else {
+          box.innerHTML = '<p>No properties found.</p>';
+        }
+      } catch (err) {
+        console.error('Failed to load properties', err);
+      }
+    }
+
+    fetchReservations();
+    fetchProperties();
+  </script>
+</body>
+</html>
