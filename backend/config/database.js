@@ -8,6 +8,7 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
+  // Removed deprecated options: acquireTimeout, timeout, reconnect, handleDisconnects
 };
 
 const pool = mysql.createPool(dbConfig);

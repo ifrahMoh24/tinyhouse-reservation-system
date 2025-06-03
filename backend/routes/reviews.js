@@ -1,3 +1,4 @@
+// ===== reviews.js =====
 const express = require('express');
 const Joi = require('joi');
 const db = require('../config/database');
@@ -5,99 +6,137 @@ const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Validation schema
-const createReviewSchema = Joi.object({
-  reservationId: Joi.number().integer().required(),
-  rating: Joi.number().integer().min(1).max(5).required(),
-  title: Joi.string().max(200).optional().allow(''),
-  comment: Joi.string().max(1000).optional().allow('')
+// Validation schema for review creation and update
+const reviewSchema = Joi.object({
+  property_id: Joi.number().integer().required(),
+  rating: Joi.number().min(1).max(5).required(),
+  comment: Joi.string().max(1000).required()
 });
 
-// Create review (tenant only)
+// =====================================================
+// POST A REVIEW
+// =====================================================
 router.post('/', authenticateToken, authorizeRoles('tenant'), async (req, res) => {
   try {
-    const { error, value } = createReviewSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({ message: error.details[0].message });
-    }
+    const { error, value } = reviewSchema.validate(req.body);
+    if (error) return res.status(400).json({ message: error.details[0].message });
 
-    const { reservationId, rating, title, comment } = value;
+    const { property_id, rating, comment } = value;
 
-    // Ensure completed reservation belongs to this tenant
-    const [reservations] = await db.execute(
-      `SELECT r.*, p.property_id 
-       FROM reservations r 
-       JOIN properties p ON r.property_id = p.property_id
-       WHERE r.reservation_id = ? AND r.tenant_id = ? AND r.reservation_status = 'completed'`,
-      [reservationId, req.user.user_id]
-    );
-
-    if (reservations.length === 0) {
-      return res.status(404).json({ message: 'Completed reservation not found' });
-    }
-
-    const reservation = reservations[0];
-
-    // Check for duplicate review
-    const [existing] = await db.execute(
-      'SELECT review_id FROM reviews WHERE reservation_id = ?',
-      [reservationId]
-    );
+    // Check if user already reviewed this property
+    const [existing] = await db.execute(`
+      SELECT * FROM reviews 
+      WHERE tenant_id = ? AND property_id = ?
+    `, [req.user.user_id, property_id]);
 
     if (existing.length > 0) {
-      return res.status(409).json({ message: 'Review already submitted for this reservation' });
+      return res.status(400).json({ message: 'You have already reviewed this property' });
     }
 
-    // Insert review
-    const [result] = await db.execute(
-      `INSERT INTO reviews (reservation_id, property_id, tenant_id, rating, title, comment) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        reservationId,
-        reservation.property_id,
-        req.user.user_id,
-        rating,
-        title || null,
-        comment || null
-      ]
-    );
+    // Insert new review
+    const [result] = await db.execute(`
+      INSERT INTO reviews (
+        tenant_id, property_id, rating, comment, review_date
+      ) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `, [req.user.user_id, property_id, rating, comment]);
 
     res.status(201).json({
-      message: 'Review created successfully',
-      reviewId: result.insertId
+      message: 'Review submitted successfully',
+      review_id: result.insertId
     });
-  } catch (error) {
-    console.error('Review creation error:', error);
-    res.status(500).json({ message: 'Failed to create review' });
+
+  } catch (err) {
+    console.error('Submit review error:', err);
+    res.status(500).json({ message: 'Failed to submit review' });
   }
 });
 
-// Get reviews for a property
+// =====================================================
+// GET REVIEWS FOR A PROPERTY - FIXED: Changed :property_id to :propertyId
+// =====================================================
 router.get('/property/:propertyId', async (req, res) => {
   try {
+    const propertyId = req.params.propertyId;
+
     const [reviews] = await db.execute(`
-      SELECT r.review_id, r.rating, r.title, r.comment, r.review_date,
-             u.first_name, u.last_name
+      SELECT r.*, u.first_name, u.last_name
       FROM reviews r
       JOIN users u ON r.tenant_id = u.user_id
-      WHERE r.property_id = ? AND r.is_approved = 1
+      WHERE r.property_id = ?
       ORDER BY r.review_date DESC
-    `, [req.params.propertyId]);
+    `, [propertyId]);
 
-    res.json({
-      reviews: reviews.map(r => ({
-        reviewId: r.review_id,
-        rating: r.rating,
-        title: r.title,
-        comment: r.comment,
-        reviewDate: r.review_date,
-        firstName: r.first_name,
-        lastName: r.last_name
-      }))
-    });
-  } catch (error) {
-    console.error('Failed to fetch reviews:', error);
+    res.json({ reviews });
+
+  } catch (err) {
+    console.error('Fetch reviews error:', err);
     res.status(500).json({ message: 'Failed to fetch reviews' });
+  }
+});
+
+// =====================================================
+// UPDATE A REVIEW - FIXED: Changed :id to :reviewId
+// =====================================================
+router.put('/:reviewId', authenticateToken, authorizeRoles('tenant'), async (req, res) => {
+  try {
+    const { error, value } = reviewSchema.validate(req.body);
+    if (error) return res.status(400).json({ message: error.details[0].message });
+
+    const { property_id, rating, comment } = value;
+    const reviewId = req.params.reviewId;
+
+    const [existing] = await db.execute(`
+      SELECT * FROM reviews WHERE review_id = ? AND tenant_id = ?
+    `, [reviewId, req.user.user_id]);
+
+    if (existing.length === 0) {
+      return res.status(404).json({ message: 'Review not found or not yours' });
+    }
+
+    await db.execute(`
+      UPDATE reviews 
+      SET property_id = ?, rating = ?, comment = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE review_id = ?
+    `, [property_id, rating, comment, reviewId]);
+
+    res.json({ message: 'Review updated successfully' });
+
+  } catch (err) {
+    console.error('Update review error:', err);
+    res.status(500).json({ message: 'Failed to update review' });
+  }
+});
+
+// =====================================================
+// DELETE A REVIEW - FIXED: Changed :id to :reviewId
+// =====================================================
+router.delete('/:reviewId', authenticateToken, async (req, res) => {
+  try {
+    const reviewId = req.params.reviewId;
+
+    const [existing] = await db.execute(`
+      SELECT * FROM reviews WHERE review_id = ?
+    `, [reviewId]);
+
+    if (existing.length === 0) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    const review = existing[0];
+    const isOwner = review.tenant_id === req.user.user_id;
+    const isAdmin = req.user.user_role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized to delete this review' });
+    }
+
+    await db.execute('DELETE FROM reviews WHERE review_id = ?', [reviewId]);
+
+    res.json({ message: 'Review deleted successfully' });
+
+  } catch (err) {
+    console.error('Delete review error:', err);
+    res.status(500).json({ message: 'Failed to delete review' });
   }
 });
 

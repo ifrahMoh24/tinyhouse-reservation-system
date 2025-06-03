@@ -1,81 +1,107 @@
+// ===== payments.js =====
 const express = require('express');
 const Joi = require('joi');
 const db = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
-
+const { authenticateToken, authorizeRoles } = require('../middleware/auth');
 const router = express.Router();
 
-// Validation schema for creating a payment
+// =============================
+// Validation schema
+// =============================
 const paymentSchema = Joi.object({
-  reservationId: Joi.number().integer().required(),
-  paymentMethod: Joi.string().valid('credit_card', 'bank_transfer', 'paypal', 'cash').required()
+  reservation_id: Joi.number().integer().required(),
+  amount: Joi.number().positive().required(),
+  transaction_id: Joi.string().required(),
+  payment_status: Joi.string().valid('pending', 'paid', 'failed').required()
 });
 
-// Create a payment
-router.post('/', authenticateToken, async (req, res) => {
+// =====================================================
+// CREATE PAYMENT
+// =====================================================
+router.post('/', authenticateToken, authorizeRoles('tenant'), async (req, res) => {
   try {
     const { error, value } = paymentSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({ message: error.details[0].message });
-    }
+    if (error) return res.status(400).json({ message: error.details[0].message });
 
-    const { reservationId, paymentMethod } = value;
+    const { reservation_id, amount, transaction_id, payment_status } = value;
 
-    // Check if reservation exists and belongs to the logged-in user
     const [reservations] = await db.execute(
       'SELECT * FROM reservations WHERE reservation_id = ? AND tenant_id = ?',
-      [reservationId, req.user.user_id]
+      [reservation_id, req.user.user_id]
     );
 
     if (reservations.length === 0) {
-      return res.status(404).json({ message: 'Reservation not found or not authorized' });
+      return res.status(404).json({ message: 'Reservation not found or not yours' });
     }
 
-    const reservation = reservations[0];
-
-    // Generate unique transaction ID
-    const transactionId = `TXN_${Date.now()}_${reservationId}`;
-
-    // Insert payment record
-    await db.execute(
-      `INSERT INTO payments (reservation_id, payment_amount, payment_method, payment_status, transaction_id) 
-       VALUES (?, ?, ?, 'completed', ?)`,
-      [reservationId, reservation.total_amount, paymentMethod, transactionId]
+    const [existing] = await db.execute(
+      'SELECT * FROM payments WHERE reservation_id = ?',
+      [reservation_id]
     );
 
-    // Update reservation status to 'confirmed'
-    await db.execute(
-      'UPDATE reservations SET reservation_status = "confirmed" WHERE reservation_id = ?',
-      [reservationId]
+    if (existing.length > 0) {
+      return res.status(400).json({ message: 'Payment already exists for this reservation' });
+    }
+
+    const [result] = await db.execute(
+      `INSERT INTO payments (reservation_id, amount, transaction_id, payment_status, payment_date)
+       VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      [reservation_id, amount, transaction_id, payment_status]
     );
 
     res.status(201).json({
-      message: 'Payment successful',
-      transactionId
+      message: 'Payment recorded successfully',
+      payment_id: result.insertId
     });
-  } catch (error) {
-    console.error('Payment error:', error);
-    res.status(500).json({ message: 'Payment processing failed' });
+
+  } catch (err) {
+    console.error('Payment creation error:', err);
+    res.status(500).json({ message: 'Failed to create payment' });
   }
 });
 
-// Get payment history
-router.get('/history', authenticateToken, async (req, res) => {
+// =====================================================
+// GET PAYMENT STATUS BY RESERVATION ID - FIXED: Changed :reservation_id to :reservationId
+// =====================================================
+router.get('/details/:reservationId', authenticateToken, async (req, res) => {
+  try {
+    const reservationId = req.params.reservationId;
+
+    const [payments] = await db.execute(
+      'SELECT * FROM payments WHERE reservation_id = ?',
+      [reservationId]
+    );
+
+    if (payments.length === 0) {
+      return res.status(404).json({ message: 'No payment found for this reservation' });
+    }
+
+    res.json({ payment: payments[0] });
+
+  } catch (err) {
+    console.error('Get payment error:', err);
+    res.status(500).json({ message: 'Failed to fetch payment' });
+  }
+});
+
+// =====================================================
+// ADMIN: VIEW ALL PAYMENTS
+// =====================================================
+router.get('/admin/all', authenticateToken, authorizeRoles('admin'), async (req, res) => {
   try {
     const [payments] = await db.execute(`
-      SELECT p.*, r.check_in_date, r.check_out_date, 
-             pr.name AS property_name
+      SELECT p.*, r.tenant_id, u.first_name, u.last_name, r.total_amount
       FROM payments p
       JOIN reservations r ON p.reservation_id = r.reservation_id
-      JOIN properties pr ON r.property_id = pr.property_id
-      WHERE r.tenant_id = ?
+      JOIN users u ON r.tenant_id = u.user_id
       ORDER BY p.payment_date DESC
-    `, [req.user.user_id]);
+    `);
 
     res.json({ payments });
-  } catch (error) {
-    console.error('Fetch payment history error:', error);
-    res.status(500).json({ message: 'Failed to retrieve payment history' });
+
+  } catch (err) {
+    console.error('Admin get all payments error:', err);
+    res.status(500).json({ message: 'Failed to fetch payments' });
   }
 });
 

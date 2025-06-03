@@ -6,37 +6,40 @@
   <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
-  <div class="container">
+
+  <!-- ✅ Property Details Container -->
+  <div class="container" style="margin-top: 3rem;">
     <h2 id="propertyName">Loading...</h2>
-    <p id="propertyLocation"></p>
-    <div id="propertyImage" style="margin-bottom: 20px;"></div>
+    <p id="propertyLocation" class="property-location"></p>
+    <div id="propertyImage" style="margin: 20px 0;"></div>
     <p><strong>Price:</strong> ₺<span id="propertyPrice"></span>/night</p>
 
-    <h3>Make a Reservation</h3>
-    <form id="reservationForm">
+    <!-- ✅ Reservation Form -->
+    <h3 style="margin-top: 2rem;">Make a Reservation</h3>
+    <form id="reservationForm" class="form-container">
       <div class="form-group">
-        <label>Check-in Date:</label>
+        <label for="checkIn">Check-in Date:</label>
         <input type="date" id="checkIn" required />
       </div>
       <div class="form-group">
-        <label>Check-out Date:</label>
+        <label for="checkOut">Check-out Date:</label>
         <input type="date" id="checkOut" required />
       </div>
       <div class="form-group">
-        <label>Guests:</label>
-        <select id="guests">
+        <label for="guests">Guests:</label>
+        <select id="guests" required>
           <option value="1">1</option>
           <option value="2">2</option>
           <option value="3">3</option>
           <option value="4">4</option>
         </select>
       </div>
-      <button class="btn-primary btn-large" type="submit">Reserve</button>
+      <button type="submit" class="btn-primary btn-large">Reserve</button>
+      <p id="message" class="success-message" style="margin-top: 1rem;"></p>
     </form>
-
-    <p id="message" class="success-message"></p>
   </div>
 
+  <!-- ✅ Reservation Logic -->
   <script>
     const params = new URLSearchParams(window.location.search);
     const propertyId = params.get('id');
@@ -46,47 +49,69 @@
       window.location.href = 'login.html';
     }
 
-    // Load property details
+    // Load Property Details
     async function loadProperty() {
       try {
         const res = await fetch(`http://localhost:3001/properties/${propertyId}`);
         const property = await res.json();
 
+        if (!res.ok || !property.title) {
+          throw new Error('Property not found');
+        }
+
         document.getElementById('propertyName').textContent = property.title;
-        document.getElementById('propertyLocation').textContent = property.city + ', ' + property.country;
+        document.getElementById('propertyLocation').textContent = `${property.city}, ${property.country}`;
         document.getElementById('propertyPrice').textContent = property.price_per_night;
-        document.getElementById('propertyImage').innerHTML =
-          `<img src="${property.image_url}" alt="${property.title}" style="max-width:100%; border-radius: 12px;">`;
+        document.getElementById('propertyImage').innerHTML = `
+          <img src="${property.image_url || 'https://via.placeholder.com/800x400'}"
+               alt="${property.title}"
+               style="width: 100%; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);" />
+        `;
       } catch (err) {
-        document.getElementById('propertyName').textContent = 'Failed to load property';
-        console.error(err);
+        console.error('❌ Failed to load property:', err);
+        document.getElementById('propertyName').textContent = '❌ Failed to load property details.';
       }
     }
 
-    // Handle reservation
+    // Handle Reservation Submission
     document.getElementById('reservationForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const check_in_date = document.getElementById('checkIn').value;
       const check_out_date = document.getElementById('checkOut').value;
       const number_of_guests = document.getElementById('guests').value;
+      const messageBox = document.getElementById('message');
+      messageBox.textContent = '';
 
-      const res = await fetch(`http://localhost:3001/reservations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-          property_id: propertyId,
-          check_in_date,
-          check_out_date,
-          number_of_guests
-        })
-      });
+      try {
+        const res = await fetch('http://localhost:3001/reservations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            property_id: propertyId,
+            check_in_date,
+            check_out_date,
+            number_of_guests
+          })
+        });
 
-      const data = await res.json();
-      const msgBox = document.getElementById('message');
-      msgBox.textContent = res.ok ? 'Reservation successful!' : (data.message || 'Failed to reserve.');
+        const result = await res.json();
+
+        if (res.ok) {
+          messageBox.style.color = '#10b981'; // green
+          messageBox.textContent = '✅ Reservation successful!';
+        } else {
+          messageBox.style.color = '#ef4444'; // red
+          messageBox.textContent = result.message || '❌ Reservation failed.';
+        }
+
+      } catch (error) {
+        console.error('❌ Error making reservation:', error);
+        messageBox.style.color = '#ef4444';
+        messageBox.textContent = 'Something went wrong. Try again.';
+      }
     });
 
     loadProperty();

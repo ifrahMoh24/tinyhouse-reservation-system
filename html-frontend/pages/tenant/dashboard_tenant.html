@@ -3,70 +3,202 @@
 <head>
   <meta charset="UTF-8" />
   <title>Tenant Dashboard - TinyHouse</title>
-  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../../css/style.css" />
 </head>
 <body>
-  <div class="container">
-    <button onclick="logout()" class="btn-secondary" style="float: right; margin-top: 1rem;">Logout</button>
-    <h2>🎉 Welcome, Tenant</h2>
-    <p>Your reservations and recommended properties are below.</p>
 
-    <h3>My Reservations</h3>
-    <div id="reservations"></div>
-
-    <h3>Explore Properties</h3>
-    <div id="properties"></div>
+  <!-- ✅ Navbar -->
+  <div class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <h2>TinyHouse</h2>
+      </div>
+      <div class="nav-links">
+        <a href="../../index.html">Home</a>
+        <a href="../properties.html">Properties</a>
+        <button onclick="logout()" class="btn-secondary">Logout</button>
+      </div>
+    </div>
   </div>
 
-  <script src="../js/logout.js"></script>
+  <!-- ✅ Hero Header -->
+  <section class="hero">
+    <div class="hero-content container">
+      <h1>🎉 Welcome, Tenant</h1>
+      <p>Your reservations and available tiny houses are listed below.</p>
+    </div>
+  </section>
+
+  <!-- ✅ Search Form -->
+  <div class="search-form" style="margin: 40px auto;">
+    <form id="searchForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="location" placeholder="e.g., Istanbul" required />
+        </div>
+        <div class="form-group">
+          <label>Check-in</label>
+          <input type="date" id="checkIn" required />
+        </div>
+        <div class="form-group">
+          <label>Check-out</label>
+          <input type="date" id="checkOut" required />
+        </div>
+        <div class="form-group">
+          <label>Guests</label>
+          <select id="guests">
+            <option value="1">1 Guest</option>
+            <option value="2">2 Guests</option>
+            <option value="3">3 Guests</option>
+            <option value="4">4 Guests</option>
+          </select>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: 20px;">
+        <button class="btn-primary btn-large" type="submit">Search Properties</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ✅ Main Content -->
+  <section class="features">
+    <div class="container">
+      <h2 class="text-center">📅 My Reservations</h2>
+      <div id="reservationsList" class="features-grid"></div>
+
+      <h2 class="text-center mt-2">🏡 Explore Tiny Houses</h2>
+      <div id="propertyGrid" class="properties-grid"></div>
+    </div>
+  </section>
+
+  <!-- ✅ Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3>TinyHouse</h3>
+          <p>Creating unforgettable stays in cozy places across Turkey.</p>
+        </div>
+        <div class="footer-section">
+          <h4>Links</h4>
+          <ul>
+            <li><a href="../../index.html">Home</a></li>
+            <li><a href="../properties.html">Properties</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; 2025 TinyHouse. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <!-- ✅ Script -->
   <script>
     const token = localStorage.getItem('token');
-    if (!token) window.location.href = 'login.html';
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-    async function fetchReservations() {
+    if (!token) {
+      window.location.href = '../../pages/login.html';
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = '../../index.html';
+    }
+
+    const emojis = ['🏠','🌲','🛖','🏕️','🛌','⛺','🌴'];
+
+    async function loadReservations() {
       try {
         const res = await fetch('http://localhost:3001/reservations/my', {
-          headers: { 'Authorization': 'Bearer ' + token }
+          headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
+        const container = document.getElementById('reservationsList');
 
-        const box = document.getElementById('reservations');
-        if (Array.isArray(data) && data.length > 0) {
-          box.innerHTML = data.map(r =>
-            `<div><b>${r.property_title}</b> | ${r.check_in_date} to ${r.check_out_date}</div>`
-          ).join('');
-        } else {
-          box.innerHTML = '<p>No reservations yet.</p>';
+        if (!Array.isArray(data) || data.length === 0) {
+          container.innerHTML = '<p class="text-center">No reservations yet.</p>';
+          return;
         }
+
+        container.innerHTML = data.map(r => `
+          <div class="feature-card">
+            <span class="feature-icon">🗓️</span>
+            <h3>${r.property_title}</h3>
+            <p>${r.check_in_date} → ${r.check_out_date}</p>
+            <p>Guests: ${r.number_of_guests}</p>
+          </div>
+        `).join('');
       } catch (err) {
-        console.error('Failed to load reservations', err);
+        document.getElementById('reservationsList').innerHTML = '<p>Error loading reservations.</p>';
+        console.error(err);
       }
     }
 
-    async function fetchProperties() {
+    async function loadProperties() {
       try {
         const res = await fetch('http://localhost:3001/properties');
         const data = await res.json();
+        const grid = document.getElementById('propertyGrid');
 
-        const box = document.getElementById('properties');
-        if (Array.isArray(data) && data.length > 0) {
-          box.innerHTML = data.map(p =>
-            `<div>
-              <h4>${p.title}</h4>
-              <p>${p.city} — ₺${p.price_per_night}/night</p>
-              <a href="../property.html?id=${p.property_id}" class="btn-primary">View</a>
-            </div>`
-          ).join('');
-        } else {
-          box.innerHTML = '<p>No properties found.</p>';
+        if (!Array.isArray(data) || data.length === 0) {
+          grid.innerHTML = '<p>No properties found.</p>';
+          return;
         }
+
+        grid.innerHTML = data.slice(0, 6).map((p, i) => `
+          <div class="property-card">
+            <div class="property-image">
+              <div class="property-price">₺${p.price_per_night}/night</div>
+              <div class="emoji" style="font-size: 5rem; text-align: center; padding-top: 3rem;">${emojis[i % emojis.length]}</div>
+            </div>
+            <div class="property-info">
+              <h3>${p.title}</h3>
+              <p class="property-location">${p.city}, ${p.country}</p>
+              <div class="property-rating">
+                <span class="stars">⭐️⭐️⭐️⭐️</span>
+                <a href="../property.html?id=${p.id}" class="btn-primary">View</a>
+              </div>
+            </div>
+          </div>
+        `).join('');
       } catch (err) {
-        console.error('Failed to load properties', err);
+        document.getElementById('propertyGrid').innerHTML = '<p>Error loading properties.</p>';
+        console.error(err);
       }
     }
 
-    fetchReservations();
-    fetchProperties();
+    async function handleSearchSubmit(event) {
+      event.preventDefault();
+      const location = document.getElementById('location').value;
+      const checkIn = document.getElementById('checkIn').value;
+      const checkOut = document.getElementById('checkOut').value;
+      const guests = document.getElementById('guests').value;
+
+      try {
+        const response = await fetch(`http://localhost:3001/properties/search?city=${location}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`);
+        const data = await response.json();
+
+        if (!response.ok || data.length === 0) {
+          alert(data.message || 'No properties found.');
+          return;
+        }
+
+        localStorage.setItem('searchResults', JSON.stringify(data));
+        window.location.href = '../properties.html';
+      } catch (error) {
+        alert('Something went wrong. Try again.');
+        console.error(error);
+      }
+    }
+
+    document.getElementById('searchForm')?.addEventListener('submit', handleSearchSubmit);
+
+    loadReservations();
+    loadProperties();
   </script>
+
 </body>
 </html>

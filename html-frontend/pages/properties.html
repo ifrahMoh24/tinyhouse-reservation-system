@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Available Properties - TinyHouse</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+ 
+  <div class="container">
+    <h1 style="text-align: center; margin-top: 30px;">🏡 Available Tiny Houses</h1>
+    <div id="propertiesGrid" class="properties-grid" style="margin-top: 40px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;"></div>
+  </div>
+
+  <div class="container">
+    <h2 class="text-center">🏡 Available Tiny Houses</h2>
+    <div id="results" class="properties-grid"></div>
+  </div>
+  
+  <script src="../js/results.js"></script>
+  
+  <style>
+    .property-card {
+      background: #fefefe;
+      border: 1px solid #eee;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 20px;
+      transition: transform 0.2s;
+    }
+    .property-card:hover {
+      transform: translateY(-4px);
+    }
+    .emoji-box {
+      font-size: 40px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .property-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    .property-location {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .property-price {
+      color: #10b981;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .btn-details {
+      display: block;
+      text-align: center;
+      margin-top: 12px;
+      background-color: #3b82f6;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+  </style>
+  
+  <script>
+  function displayProperties(properties) {
+    const grid = document.getElementById('propertiesGrid');
+    grid.innerHTML = '';
+
+    if (!Array.isArray(properties) || properties.length === 0) {
+      grid.innerHTML = '<p style="color:red;">❌ No properties found.</p>';
+      return;
+    }
+
+    properties.forEach((property, index) => {
+      const emojis = ['🏕️', '🛖', '🏠', '🛌', '🌲', '🌿'];
+      const emoji = emojis[index % emojis.length];
+
+      const card = document.createElement('div');
+      card.className = 'property-card';
+
+      card.innerHTML = `
+        <div class="emoji-box">${emoji}</div>
+        <div class="property-title">${property.title}</div>
+        <div class="property-location">${property.city}, ${property.country}</div>
+        <div class="property-price">₺${property.price_per_night}/night</div>
+        <a href="property.html?id=${property.property_id}" class="btn-details">View Details</a>
+      `;
+
+      grid.appendChild(card);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const stored = localStorage.getItem('searchResults');
+    if (stored) {
+      try {
+        const properties = JSON.parse(stored);
+        displayProperties(properties);
+        localStorage.removeItem('searchResults'); // optional: clear after use
+      } catch (err) {
+        console.error('Failed to parse search results:', err);
+        document.getElementById('propertiesGrid').innerHTML = '<p style="color:red;">❌ Failed to load properties.</p>';
+      }
+    } else {
+      // fallback fetch all
+      fetch('http://localhost:3001/properties')
+        .then(res => res.json())
+        .then(displayProperties)
+        .catch(err => {
+          console.error('Error loading properties:', err);
+          document.getElementById('propertiesGrid').innerHTML = '<p style="color:red;">❌ Error fetching properties.</p>';
+        });
+    }
+  });
+</script>
+</body>
+</html>
