@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Property Details - TinyHouse</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">
+  <style>
+    .property-hero {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 4rem 0 2rem;
+      margin-bottom: 3rem;
+    }
+    .property-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    .property-gallery {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      grid-template-rows: 300px 300px;
+      gap: 1rem;
+      margin-bottom: 3rem;
+      border-radius: 15px;
+      overflow: hidden;
+    }
+    .gallery-main {
+      grid-row: span 2;
+    }
+    .gallery-item {
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .property-info {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+    .property-details {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .booking-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      height: fit-content;
+      position: sticky;
+      top: 2rem;
+    }
+    .price-display {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #059669;
+      margin-bottom: 1rem;
+    }
+    .property-amenities {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .amenity-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .amenity-icon {
+      margin-right: 0.5rem;
+      font-size: 1.2rem;
+    }
+    .booking-form {
+      margin-top: 2rem;
+    }
+    .date-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .reviews-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 3rem;
+    }
+    .review-item {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 1.5rem 0;
+    }
+    .review-item:last-child {
+      border-bottom: none;
+    }
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .reviewer-name {
+      font-weight: 600;
+      color: #1f2937;
+    }
+    .review-rating {
+      color: #f59e0b;
+    }
+    .review-date {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    .owner-info {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 3rem;
+    }
+    .owner-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #3b82f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.5rem;
+      margin-right: 1rem;
+    }
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: #6b7280;
+    }
+    .error-message {
+      background: #fef2f2;
+      color: #dc2626;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+    .success-message {
+      background: #f0fdf4;
+      color: #059669;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <h2>🏠 TinyHouse</h2>
+      </div>
+      <div class="nav-links">
+        <a href="/frontend">Home</a>
+        <a href="/frontend/pages/properties.html">Browse Properties</a>
+        <span id="authLinks">
+          <a href="/frontend/pages/login.html" class="btn-primary">Login</a>
+          <a href="/frontend/pages/register.html" class="btn-secondary">Register</a>
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Property Hero -->
+  <div class="property-hero">
+    <div class="property-container">
+      <h1 id="propertyTitle">Loading Property...</h1>
+      <p id="propertyLocation">📍 Loading location...</p>
+    </div>
+  </div>
+
+  <div class="property-container">
+    <!-- Loading State -->
+    <div id="loadingState" class="loading">
+      <h3>Loading property details...</h3>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="error-message" style="display: none;">
+      <h3>Property not found</h3>
+      <p>The property you're looking for doesn't exist or has been removed.</p>
+      <a href="/frontend" class="btn-primary">Back to Home</a>
+    </div>
+
+    <!-- Property Content -->
+    <div id="propertyContent" style="display: none;">
+      <!-- Property Gallery -->
+      <div class="property-gallery">
+        <div class="gallery-item gallery-main">
+          <img id="mainImage" src="https://images.unsplash.com/photo-1464207687429-7505649dae38?w=800" alt="Property Main">
+        </div>
+        <div class="gallery-item">
+          <img src="https://images.unsplash.com/photo-1520637736862-4d197d17c726?w=400" alt="Property">
+        </div>
+        <div class="gallery-item">
+          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400" alt="Property">
+        </div>
+        <div class="gallery-item">
+          <img src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400" alt="Property">
+        </div>
+        <div class="gallery-item">
+          <img src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400" alt="Property">
+        </div>
+      </div>
+
+      <!-- Property Info -->
+      <div class="property-info">
+        <div>
+          <!-- Property Details -->
+          <div class="property-details">
+            <h2>About this place</h2>
+            <p id="propertyDescription">Loading description...</p>
+            
+            <div class="property-amenities" id="propertyAmenities">
+              <div class="amenity-item">
+                <span class="amenity-icon">👥</span>
+                <span id="maxGuests">Loading...</span>
+              </div>
+              <div class="amenity-item">
+                <span class="amenity-icon">🛏️</span>
+                <span id="bedrooms">Loading...</span>
+              </div>
+              <div class="amenity-item">
+                <span class="amenity-icon">🛁</span>
+                <span id="bathrooms">Loading...</span>
+              </div>
+              <div class="amenity-item">
+                <span class="amenity-icon">📶</span>
+                <span>WiFi</span>
+              </div>
+              <div class="amenity-item">
+                <span class="amenity-icon">🅿️</span>
+                <span>Free Parking</span>
+              </div>
+              <div class="amenity-item">
+                <span class="amenity-icon">🍳</span>
+                <span>Kitchen</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Owner Info -->
+          <div class="owner-info">
+            <h3>Your Host</h3>
+            <div style="display: flex; align-items: center;">
+              <div class="owner-avatar" id="ownerAvatar">H</div>
+              <div>
+                <h4 id="ownerName">Loading...</h4>
+                <p style="color: #6b7280; margin: 0;">Property Owner</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reviews Section -->
+          <div class="reviews-section">
+            <h3>Reviews</h3>
+            <div id="reviewsContainer">
+              <p style="color: #6b7280;">Loading reviews...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Booking Card -->
+        <div class="booking-card">
+          <div class="price-display">
+            <span id="pricePerNight">₺150</span>/night
+          </div>
+          
+          <div id="loginPrompt">
+            <p style="color: #6b7280; margin-bottom: 1rem;">Please login to make a reservation</p>
+            <a href="/frontend/pages/login.html" class="btn-primary" style="width: 100%; text-align: center;">Login to Book</a>
+          </div>
+
+          <div id="bookingForm" style="display: none;">
+            <form id="reservationForm">
+              <div class="date-inputs">
+                <div class="form-group">
+                  <label>Check-in</label>
+                  <input type="date" id="checkIn" required>
+                </div>
+                <div class="form-group">
+                  <label>Check-out</label>
+                  <input type="date" id="checkOut" required>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>Guests</label>
+                <select id="guests" required>
+                  <option value="1">1 Guest</option>
+                  <option value="2">2 Guests</option>
+                  <option value="3">3 Guests</option>
+                  <option value="4">4 Guests</option>
+                  <option value="5">5 Guests</option>
+                  <option value="6">6 Guests</option>
+                </select>
+              </div>
+
+              <div id="priceBreakdown" style="display: none; margin: 1rem 0; padding: 1rem; background: #f9fafb; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Subtotal:</span>
+                  <span id="subtotal">₺0</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span>Cleaning fee:</span>
+                  <span id="cleaningFeeDisplay">₺0</span>
+                </div>
+                <hr style="margin: 0.5rem 0;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                  <span>Total:</span>
+                  <span id="totalAmount">₺0</span>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary" style="width: 100%;">
+                Reserve Now
+              </button>
+            </form>
+          </div>
+
+          <div id="reservationMessage"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/frontend/js/api.js"></script>
+  <script>
+    let currentProperty = null;
+    const token = localStorage.getItem('token');
+    const user = token ? JSON.parse(localStorage.getItem('user') || '{}') : null;
+
+    // Get property ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const propertyId = urlParams.get('id');
+
+    if (!propertyId) {
+      showError('No property ID provided');
+    } else {
+      loadProperty();
+    }
+
+    // Update auth links
+    if (token && user) {
+      document.getElementById('authLinks').innerHTML = `
+        <a href="/frontend/pages/${user.role}/dashboard_${user.role}.html">${user.firstName}</a>
+        <a href="#" onclick="logout()" class="btn-secondary">Logout</a>
+      `;
+      document.getElementById('loginPrompt').style.display = 'none';
+      document.getElementById('bookingForm').style.display = 'block';
+    }
+
+    async function loadProperty() {
+      try {
+        const response = await fetch(`http://localhost:3001/properties/${propertyId}`);
+        const data = await response.json();
+
+        if (response.ok && data.property) {
+          currentProperty = data.property;
+          displayProperty(data.property);
+        } else {
+          showError('Property not found');
+        }
+      } catch (error) {
+        console.error('Error loading property:', error);
+        showError('Failed to load property');
+      }
+    }
+
+    function displayProperty(property) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('propertyContent').style.display = 'block';
+
+      // Basic info
+      document.getElementById('propertyTitle').textContent = property.title;
+      document.getElementById('propertyLocation').textContent = `📍 ${property.city}, ${property.country}`;
+      document.getElementById('propertyDescription').textContent = property.description || 'No description available.';
+      document.getElementById('pricePerNight').textContent = `₺${property.price_per_night}`;
+
+      // Property details
+      document.getElementById('maxGuests').textContent = `${property.max_guests} guests`;
+      document.getElementById('bedrooms').textContent = `${property.bedrooms} bedrooms`;
+      document.getElementById('bathrooms').textContent = `${property.bathrooms} bathrooms`;
+
+      // Owner info
+      const ownerName = `${property.owner_first_name} ${property.owner_last_name}`;
+      document.getElementById('ownerName').textContent = ownerName;
+      document.getElementById('ownerAvatar').textContent = property.owner_first_name.charAt(0);
+
+      // Reviews
+      displayReviews(property.reviews || []);
+
+      // Set minimum dates
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('checkIn').min = today;
+      document.getElementById('checkOut').min = today;
+
+      // Setup max guests
+      const guestsSelect = document.getElementById('guests');
+      guestsSelect.innerHTML = '';
+      for (let i = 1; i <= property.max_guests; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = `${i} Guest${i > 1 ? 's' : ''}`;
+        guestsSelect.appendChild(option);
+      }
+    }
+
+    function displayReviews(reviews) {
+      const container = document.getElementById('reviewsContainer');
+      
+      if (!reviews || reviews.length === 0) {
+        container.innerHTML = '<p style="color: #6b7280;">No reviews yet. Be the first to leave a review!</p>';
+        return;
+      }
+
+      container.innerHTML = reviews.map(review => `
+        <div class="review-item">
+          <div class="review-header">
+            <span class="reviewer-name">${review.first_name} ${review.last_name}</span>
+            <div>
+              <span class="review-rating">${'⭐'.repeat(review.rating)}</span>
+              <span class="review-date">${formatDate(review.review_date)}</span>
+            </div>
+          </div>
+          <p style="color: #4b5563; margin: 0;">${review.comment}</p>
+        </div>
+      `).join('');
+    }
+
+    // Price calculation
+    document.getElementById('checkIn').addEventListener('change', calculatePrice);
+    document.getElementById('checkOut').addEventListener('change', calculatePrice);
+
+    function calculatePrice() {
+      const checkIn = document.getElementById('checkIn').value;
+      const checkOut = document.getElementById('checkOut').value;
+
+      if (checkIn && checkOut && currentProperty) {
+        const checkInDate = new Date(checkIn);
+        const checkOutDate = new Date(checkOut);
+        const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+
+        if (nights > 0) {
+          const subtotal = nights * currentProperty.price_per_night;
+          const cleaningFee = currentProperty.cleaning_fee || 0;
+          const total = subtotal + cleaningFee;
+
+          document.getElementById('subtotal').textContent = `₺${subtotal}`;
+          document.getElementById('cleaningFeeDisplay').textContent = `₺${cleaningFee}`;
+          document.getElementById('totalAmount').textContent = `₺${total}`;
+          document.getElementById('priceBreakdown').style.display = 'block';
+
+          // Update checkout min date
+          const nextDay = new Date(checkInDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+          document.getElementById('checkOut').min = nextDay.toISOString().split('T')[0];
+        }
+      }
+    }
+
+    // Reservation form
+    document.getElementById('reservationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!token) {
+        alert('Please login to make a reservation');
+        window.location.href = '/frontend/pages/login.html';
+        return;
+      }
+
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating Reservation...';
+
+      try {
+        const checkIn = document.getElementById('checkIn').value;
+        const checkOut = document.getElementById('checkOut').value;
+        const guests = parseInt(document.getElementById('guests').value);
+
+        const response = await fetch('http://localhost:3001/reservations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            propertyId: propertyId,
+            checkIn: checkIn,
+            checkOut: checkOut,
+            guests: guests
+          })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          document.getElementById('reservationMessage').innerHTML = `
+            <div class="success-message">
+              <h4>Reservation successful!</h4>
+              <p>Your reservation has been created. Total amount: ₺${result.totalAmount}</p>
+              <a href="/frontend/pages/tenant/dashboard_tenant.html" class="btn-primary">View My Reservations</a>
+            </div>
+          `;
+          document.getElementById('reservationForm').style.display = 'none';
+        } else {
+          throw new Error(result.message || 'Reservation failed');
+        }
+      } catch (error) {
+        document.getElementById('reservationMessage').innerHTML = `
+          <div class="error-message">
+            ${error.message}
+          </div>
+        `;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+
+    function showError(message) {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('errorState').style.display = 'block';
+      document.getElementById('errorState').querySelector('p').textContent = message;
+    }
+
+    function formatDate(dateString) {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/frontend/pages/login.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add New Property - TinyHouse</title>
+  <a href="/frontend">Home</a>
+<a href="/frontend/pages/owner/dashboard_owner.html">Dashboard</a>  
+  <style>
+    .form-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .form-header {
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    .form-content {
+      padding: 2rem;
+    }
+    .form-section {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .form-section:last-child {
+      border-bottom: none;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+    }
+    .section-icon {
+      margin-right: 0.5rem;
+      font-size: 1.5rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .amenities-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .amenity-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem;
+      background: #f9fafb;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .amenity-item:hover {
+      background: #e5e7eb;
+    }
+    .amenity-item input[type="checkbox"] {
+      margin-right: 0.75rem;
+      width: auto;
+    }
+    .image-upload {
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .image-upload:hover {
+      border-color: #3b82f6;
+      background: #f9fafb;
+    }
+    .image-upload.dragover {
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+    .preview-images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .preview-image {
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 1;
+    }
+    .preview-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .remove-image {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .progress-indicator {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .progress-step {
+      display: flex;
+      align-items: center;
+      margin: 0 1rem;
+    }
+    .step-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+    .step-circle.active {
+      background: #3b82f6;
+      color: white;
+    }
+    .step-circle.completed {
+      background: #10b981;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <h2>🏠 TinyHouse</h2>
+      </div>
+      <div class="nav-links">
+        <a href="../index.html">Home</a>
+        <a href="dashboard-owner.html">Dashboard</a>
+        <a href="#" onclick="logout()" class="btn-secondary">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="form-container">
+      <div class="form-header">
+        <h1>🏠 List Your Tiny House</h1>
+        <p>Share your unique space with travelers around the world</p>
+      </div>
+
+      <div class="form-content">
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+          <div class="progress-step">
+            <div class="step-circle active" id="step1">1</div>
+            <span>Basic Info</span>
+          </div>
+          <div class="progress-step">
+            <div class="step-circle" id="step2">2</div>
+            <span>Details</span>
+          </div>
+          <div class="progress-step">
+            <div class="step-circle" id="step3">3</div>
+            <span>Amenities</span>
+          </div>
+          <div class="progress-step">
+            <div class="step-circle" id="step4">4</div>
+            <span>Photos</span>
+          </div>
+        </div>
+
+        <form id="propertyForm">
+          <!-- Step 1: Basic Information -->
+          <div class="form-section" id="section1">
+            <div class="section-title">
+              <span class="section-icon">📝</span>
+              Basic Information
+            </div>
+            
+            <div class="form-group">
+              <label for="title">Property Title *</label>
+              <input type="text" id="title" name="title" required 
+                     placeholder="e.g., Cozy Mountain Retreat">
+            </div>
+
+            <div class="form-group">
+              <label for="description">Description</label>
+              <textarea id="description" name="description" rows="4" 
+                        placeholder="Describe your property, what makes it special, and what guests can expect..."></textarea>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="address">Street Address *</label>
+                <input type="text" id="address" name="address" required 
+                       placeholder="123 Mountain View Road">
+              </div>
+              <div class="form-group">
+                <label for="city">City *</label>
+                <input type="text" id="city" name="city" required 
+                       placeholder="Antalya">
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="country">Country</label>
+                <select id="country" name="country">
+                  <option value="Turkey">Turkey</option>
+                  <option value="Greece">Greece</option>
+                  <option value="Italy">Italy</option>
+                  <option value="Spain">Spain</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="pricePerNight">Price per Night (₺) *</label>
+                <input type="number" id="pricePerNight" name="pricePerNight" required 
+                       min="50" placeholder="150">
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Property Details -->
+          <div class="form-section" id="section2" style="display: none;">
+            <div class="section-title">
+              <span class="section-icon">🏠</span>
+              Property Details
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="maxGuests">Maximum Guests *</label>
+                <select id="maxGuests" name="maxGuests" required>
+                  <option value="">Select...</option>
+                  <option value="1">1 Guest</option>
+                  <option value="2">2 Guests</option>
+                  <option value="3">3 Guests</option>
+                  <option value="4">4 Guests</option>
+                  <option value="5">5 Guests</option>
+                  <option value="6">6+ Guests</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="bedrooms">Bedrooms *</label>
+                <select id="bedrooms" name="bedrooms" required>
+                  <option value="">Select...</option>
+                  <option value="1">1 Bedroom</option>
+                  <option value="2">2 Bedrooms</option>
+                  <option value="3">3 Bedrooms</option>
+                  <option value="4">4+ Bedrooms</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="bathrooms">Bathrooms *</label>
+                <select id="bathrooms" name="bathrooms" required>
+                  <option value="">Select...</option>
+                  <option value="1">1 Bathroom</option>
+                  <option value="2">2 Bathrooms</option>
+                  <option value="3">3+ Bathrooms</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="cleaningFee">Cleaning Fee (₺)</label>
+                <input type="number" id="cleaningFee" name="cleaningFee" 
+                       min="0" placeholder="50">
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="latitude">Latitude (optional)</label>
+                <input type="number" id="latitude" name="latitude" 
+                       step="any" placeholder="36.8969">
+              </div>
+              <div class="form-group">
+                <label for="longitude">Longitude (optional)</label>
+                <input type="number" id="longitude" name="longitude" 
+                       step="any" placeholder="30.7133">
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Amenities -->
+          <div class="form-section" id="section3" style="display: none;">
+            <div class="section-title">
+              <span class="section-icon">⭐</span>
+              Amenities
+            </div>
+            <p style="color: #6b7280; margin-bottom: 1.5rem;">
+              Select all amenities available at your property
+            </p>
+
+            <div class="amenities-grid" id="amenitiesList">
+              <!-- Amenities will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Step 4: Photos -->
+          <div class="form-section" id="section4" style="display: none;">
+            <div class="section-title">
+              <span class="section-icon">📸</span>
+              Property Photos
+            </div>
+            <p style="color: #6b7280; margin-bottom: 1.5rem;">
+              Add high-quality photos to showcase your property (Maximum 10 photos)
+            </p>
+
+            <div class="image-upload" id="imageUpload">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">📷</div>
+              <h3>Drag & drop photos here</h3>
+              <p>or click to browse</p>
+              <input type="file" id="imageInput" multiple accept="image/*" style="display: none;">
+            </div>
+
+            <div class="preview-images" id="previewImages">
+              <!-- Preview images will be shown here -->
+            </div>
+          </div>
+
+          <!-- Navigation Buttons -->
+          <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+            <button type="button" id="prevBtn" onclick="changeStep(-1)" 
+                    class="btn-secondary" style="display: none;">
+              Previous
+            </button>
+            <button type="button" id="nextBtn" onclick="changeStep(1)" 
+                    class="btn-primary">
+              Next
+            </button>
+            <button type="submit" id="submitBtn" class="btn-primary" style="display: none;">
+              List Property
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/frontend/js/api.js"></script>
+  <script>
+    let currentStep = 1;
+    let selectedImages = [];
+    let amenities = [];
+
+    // Check authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '../pages/login.html';
+    }
+
+    // Initialize form
+    document.addEventListener('DOMContentLoaded', () => {
+      loadAmenities();
+      setupImageUpload();
+      updateStepDisplay();
+    });
+
+    // Load amenities (mock data for now)
+    function loadAmenities() {
+      amenities = [
+        { id: 1, name: 'WiFi', icon: '📶' },
+        { id: 2, name: 'Kitchen', icon: '🍳' },
+        { id: 3, name: 'Air Conditioning', icon: '❄️' },
+        { id: 4, name: 'Heating', icon: '🔥' },
+        { id: 5, name: 'TV', icon: '📺' },
+        { id: 6, name: 'Parking', icon: '🚗' },
+        { id: 7, name: 'Pet Friendly', icon: '🐕' },
+        { id: 8, name: 'Smoking Allowed', icon: '🚬' },
+        { id: 9, name: 'Hot Tub', icon: '🛁' },
+        { id: 10, name: 'Pool', icon: '🏊' },
+        { id: 11, name: 'Gym', icon: '💪' },
+        { id: 12, name: 'Fireplace', icon: '🔥' },
+        { id: 13, name: 'Balcony', icon: '🏞️' },
+        { id: 14, name: 'Garden', icon: '🌳' },
+        { id: 15, name: 'BBQ', icon: '🔥' },
+        { id: 16, name: 'Washer', icon: '🧺' }
+      ];
+
+      const container = document.getElementById('amenitiesList');
+      container.innerHTML = amenities.map(amenity => `
+        <label class="amenity-item">
+          <input type="checkbox" name="amenities" value="${amenity.id}">
+          <span>${amenity.icon} ${amenity.name}</span>
+        </label>
+      `).join('');
+    }
+
+    // Setup image upload
+    function setupImageUpload() {
+      const uploadArea = document.getElementById('imageUpload');
+      const imageInput = document.getElementById('imageInput');
+
+      uploadArea.addEventListener('click', () => imageInput.click());
+
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+      });
+
+      imageInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+      });
+    }
+
+    // Handle file uploads
+    function handleFiles(files) {
+      if (selectedImages.length + files.length > 10) {
+        alert('Maximum 10 images allowed');
+        return;
+      }
+
+      Array.from(files).forEach(file => {
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            selectedImages.push({
+              file: file,
+              url: e.target.result,
+              id: Date.now() + Math.random()
+            });
+            updateImagePreviews();
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Update image previews
+    function updateImagePreviews() {
+      const container = document.getElementById('previewImages');
+      container.innerHTML = selectedImages.map((image, index) => `
+        <div class="preview-image">
+          <img src="${image.url}" alt="Preview ${index + 1}">
+          <button type="button" class="remove-image" onclick="removeImage(${index})">×</button>
+        </div>
+      `).join('');
+    }
+
+    // Remove image
+    function removeImage(index) {
+      selectedImages.splice(index, 1);
+      updateImagePreviews();
+    }
+
+    // Change step
+    function changeStep(direction) {
+      if (direction === 1 && !validateCurrentStep()) {
+        return;
+      }
+
+      currentStep += direction;
+      updateStepDisplay();
+    }
+
+    // Update step display
+    function updateStepDisplay() {
+      // Hide all sections
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById(`section${i}`).style.display = 'none';
+        document.getElementById(`step${i}`).classList.remove('active', 'completed');
+      }
+
+      // Show current section
+      document.getElementById(`section${currentStep}`).style.display = 'block';
+      document.getElementById(`step${currentStep}`).classList.add('active');
+
+      // Mark completed steps
+      for (let i = 1; i < currentStep; i++) {
+        document.getElementById(`step${i}`).classList.add('completed');
+      }
+
+      // Update buttons
+      document.getElementById('prevBtn').style.display = currentStep > 1 ? 'block' : 'none';
+      document.getElementById('nextBtn').style.display = currentStep < 4 ? 'block' : 'none';
+      document.getElementById('submitBtn').style.display = currentStep === 4 ? 'block' : 'none';
+    }
+
+   // Validate current step
+   function validateCurrentStep() {
+      const requiredFields = {
+        1: ['title', 'address', 'city', 'pricePerNight'],
+        2: ['maxGuests', 'bedrooms', 'bathrooms'],
+        3: [], // No required fields for amenities
+        4: []  // No required fields for photos
+      };
+
+      const currentRequired = requiredFields[currentStep] || [];
+      
+      for (const fieldName of currentRequired) {
+        const field = document.getElementById(fieldName);
+        if (!field || !field.value.trim()) {
+          alert(`Please fill in the ${fieldName.replace(/([A-Z])/g, ' $1').toLowerCase()} field`);
+          if (field) field.focus();
+          return false;
+        }
+      }
+
+      // Additional validations
+      if (currentStep === 1) {
+        const price = parseFloat(document.getElementById('pricePerNight').value);
+        if (price < 50) {
+          alert('Minimum price per night is ₺50');
+          document.getElementById('pricePerNight').focus();
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    // Form submission
+    document.getElementById('propertyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!validateCurrentStep()) {
+        return;
+      }
+
+      // Show loading
+      const submitBtn = document.getElementById('submitBtn');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating Property...';
+
+      try {
+        // Collect form data
+        const formData = new FormData();
+        
+        // Basic information
+        formData.append('title', document.getElementById('title').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('address', document.getElementById('address').value);
+        formData.append('city', document.getElementById('city').value);
+        formData.append('country', document.getElementById('country').value);
+        formData.append('pricePerNight', document.getElementById('pricePerNight').value);
+        
+        // Property details
+        formData.append('maxGuests', document.getElementById('maxGuests').value);
+        formData.append('bedrooms', document.getElementById('bedrooms').value);
+        formData.append('bathrooms', document.getElementById('bathrooms').value);
+        formData.append('cleaningFee', document.getElementById('cleaningFee').value || 0);
+        
+        // Coordinates (optional)
+        const latitude = document.getElementById('latitude').value;
+        const longitude = document.getElementById('longitude').value;
+        if (latitude) formData.append('latitude', latitude);
+        if (longitude) formData.append('longitude', longitude);
+
+        // Amenities
+        const selectedAmenities = Array.from(document.querySelectorAll('input[name="amenities"]:checked'))
+          .map(checkbox => checkbox.value);
+        formData.append('amenities', JSON.stringify(selectedAmenities));
+
+        // Images
+        selectedImages.forEach((image, index) => {
+          formData.append('images', image.file);
+          if (index === 0) {
+            formData.append('primaryImageIndex', 0);
+          }
+        });
+
+        // Send to API
+        const response = await fetch('http://localhost:3001/properties', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert('Property listed successfully!');
+          window.location.href = 'dashboard-owner.html';
+        } else {
+          throw new Error(result.message || 'Failed to create property');
+        }
+
+      } catch (error) {
+        console.error('Error creating property:', error);
+        alert('Failed to create property: ' + error.message);
+      } finally {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+
+    // Utility functions
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '../pages/login.html';
+    }
+
+    // Auto-fill coordinates based on city (optional feature)
+    document.getElementById('city').addEventListener('blur', async () => {
+      const city = document.getElementById('city').value;
+      if (city && !document.getElementById('latitude').value) {
+        // This could integrate with a geocoding service
+        // For now, just provide some sample coordinates for Turkish cities
+        const cityCoordinates = {
+          'istanbul': { lat: 41.0082, lng: 28.9784 },
+          'ankara': { lat: 39.9334, lng: 32.8597 },
+          'izmir': { lat: 38.4192, lng: 27.1287 },
+          'antalya': { lat: 36.8969, lng: 30.7133 },
+          'bursa': { lat: 40.1926, lng: 29.0616 },
+          'adana': { lat: 37.0000, lng: 35.3213 }
+        };
+
+        const coords = cityCoordinates[city.toLowerCase()];
+        if (coords) {
+          document.getElementById('latitude').value = coords.lat;
+          document.getElementById('longitude').value = coords.lng;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

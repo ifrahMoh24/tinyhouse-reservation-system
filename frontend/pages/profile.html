@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - TinyHouse</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .profile-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-name {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-role {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-since {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .profile-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .form-group input:disabled {
+            background: #f9fafb;
+            color: #6b7280;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #374151;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-large {
+            width: 100%;
+            padding: 1rem;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .password-requirements {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        .loading {
+            text-align: center;
+            color: #6b7280;
+            padding: 2rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .profile-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-container {
+                padding: 0 1rem;
+            }
+            
+            .profile-header {
+                padding: 2rem 1rem;
+            }
+            
+            .profile-avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h2>🏠 TinyHouse</h2>
+            </div>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="properties.html">Properties</a>
+                <a href="#" id="dashboardLink">Dashboard</a>
+                <a href="#" onclick="logout()" class="btn-secondary">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="profile-container">
+        <!-- Loading State -->
+        <div id="loadingState" class="loading">
+            <h3>Loading profile...</h3>
+        </div>
+
+        <!-- Profile Content -->
+        <div id="profileContent" style="display: none;">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">U</div>
+                <h1 class="profile-name" id="profileName">Loading...</h1>
+                <p class="profile-role" id="profileRole">User</p>
+                <p class="profile-since" id="profileSince">Member since 2024</p>
+            </div>
+
+            <!-- Profile Content Grid -->
+            <div class="profile-content">
+                <!-- Personal Information -->
+                <div class="profile-card">
+                    <h2 class="card-title">
+                        👤 Personal Information
+                    </h2>
+                    
+                    <form id="profileForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" disabled>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">Phone Number (Optional)</label>
+                                <input type="tel" id="phone" placeholder="+90 555 123 4567">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-large">
+                            Update Profile
+                        </button>
+                        
+                        <div id="profileMessage" class="message"></div>
+                    </form>
+                </div>
+
+                <!-- Account Settings -->
+                <div class="profile-card">
+                    <h2 class="card-title">
+                        🔒 Account Settings
+                    </h2>
+                    
+                    <!-- Account Stats -->
+                    <div class="stats-grid" id="accountStats">
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalReservations">0</span>
+                            <div class="stat-label">Reservations</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" id="totalProperties">0</span>
+                            <div class="stat-label">Properties</div>
+                        </div>
+                    </div>
+
+                    <!-- Password Change -->
+                    <form id="passwordForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" id="currentPassword" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" id="newPassword" required>
+                                <div class="password-requirements">
+                                    Minimum 6 characters
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" required>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-secondary btn-large">
+                            Change Password
+                        </button>
+                        
+                        <div id="passwordMessage" class="message"></div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="profile-card" style="border: 2px solid #fecaca;">
+                <h2 class="card-title" style="color: #dc2626;">
+                    ⚠️ Danger Zone
+                </h2>
+                <p style="color: #6b7280; margin-bottom: 1rem;">
+                    Once you delete your account, there is no going back. Please be certain.
+                </p>
+                <button onclick="confirmDeleteAccount()" class="btn btn-danger">
+                    Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        const user = token ? JSON.parse(localStorage.getItem('user') || '{}') : null;
+
+        if (!token) {
+            alert('Please login first');
+            window.location.href = 'login.html';
+        }
+
+        // Set dashboard link based on user role
+        if (user && user.role) {
+            document.getElementById('dashboardLink').href = `${user.role}/dashboard_${user.role}.html`;
+        }
+
+        // Load user profile
+        async function loadProfile() {
+            try {
+                const response = await fetch('http://localhost:3001/auth/profile', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load profile');
+                }
+
+                const data = await response.json();
+                displayProfile(data.user);
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showMessage('profileMessage', 'Failed to load profile', 'error');
+            }
+        }
+
+        // Display profile data
+        function displayProfile(userData) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('profileContent').style.display = 'block';
+
+            // Header info
+            const fullName = `${userData.first_name} ${userData.last_name}`;
+            document.getElementById('profileName').textContent = fullName;
+            document.getElementById('profileRole').textContent = userData.user_role.charAt(0).toUpperCase() + userData.user_role.slice(1);
+            document.getElementById('profileAvatar').textContent = userData.first_name.charAt(0).toUpperCase();
+            
+            if (userData.registration_date) {
+                const joinDate = new Date(userData.registration_date).getFullYear();
+                document.getElementById('profileSince').textContent = `Member since ${joinDate}`;
+            }
+
+            // Form fields
+            document.getElementById('firstName').value = userData.first_name || '';
+            document.getElementById('lastName').value = userData.last_name || '';
+            document.getElementById('email').value = userData.email || '';
+            document.getElementById('phone').value = userData.phone || '';
+
+            // Load stats
+            loadAccountStats();
+        }
+
+        // Load account statistics
+        async function loadAccountStats() {
+            try {
+                const response = await fetch('http://localhost:3001/reservations/statistics', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const stats = data.statistics;
+                    
+                    document.getElementById('totalReservations').textContent = stats.total_reservations || 0;
+                    
+                    // Show properties count only for owners
+                    if (user.role === 'owner') {
+                        document.getElementById('totalProperties').textContent = stats.total_properties || 0;
+                    } else {
+                        document.querySelector('.stat-item:last-child .stat-label').textContent = 'Total Spent';
+                        document.getElementById('totalProperties').textContent = '₺' + (stats.total_spent || 0);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Handle profile form submission
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating...';
+
+            try {
+                const formData = {
+                    firstName: document.getElementById('firstName').value.trim(),
+                    lastName: document.getElementById('lastName').value.trim(),
+                    phone: document.getElementById('phone').value.trim()
+                };
+
+                const response = await fetch('http://localhost:3001/auth/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('profileMessage', 'Profile updated successfully! 🎉', 'success');
+                    
+                    // Update stored user data
+                    const updatedUser = { ...user, firstName: formData.firstName, lastName: formData.lastName };
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                    
+                    // Update display
+                    document.getElementById('profileName').textContent = `${formData.firstName} ${formData.lastName}`;
+                    document.getElementById('profileAvatar').textContent = formData.firstName.charAt(0).toUpperCase();
+                    
+                } else {
+                    throw new Error(result.message || 'Update failed');
+                }
+
+            } catch (error) {
+                console.error('Profile update error:', error);
+                showMessage('profileMessage', 'Update failed: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+
+        // Handle password form submission
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showMessage('passwordMessage', 'Passwords do not match', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showMessage('passwordMessage', 'Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Changing...';
+
+            try {
+                const response = await fetch('http://localhost:3001/auth/change-password', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        currentPassword: document.getElementById('currentPassword').value,
+                        newPassword: newPassword
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('passwordMessage', 'Password changed successfully! 🎉', 'success');
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    throw new Error(result.message || 'Password change failed');
+                }
+
+            } catch (error) {
+                console.error('Password change error:', error);
+                showMessage('passwordMessage', 'Password change failed: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+
+        // Show message function
+        function showMessage(elementId, message, type) {
+            const messageEl = document.getElementById(elementId);
+            messageEl.textContent = message;
+            messageEl.className = 'message ' + (type === 'success' ? 'success-message' : 'error-message');
+            messageEl.style.display = 'block';
+
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // Confirm account deletion
+        function confirmDeleteAccount() {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                if (confirm('This will permanently delete all your data. Are you absolutely sure?')) {
+                    deleteAccount();
+                }
+            }
+        }
+
+        // Delete account function
+        async function deleteAccount() {
+            try {
+                const response = await fetch('http://localhost:3001/auth/delete-account', {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Account deleted successfully');
+                    logout();
+                } else {
+                    const result = await response.json();
+                    alert('Failed to delete account: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Account deletion error:', error);
+                alert('Failed to delete account');
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize page
+        loadProfile();
+    </script>
+</body>
+</html>

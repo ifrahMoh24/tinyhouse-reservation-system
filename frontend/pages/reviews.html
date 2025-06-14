@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reviews - TinyHouse</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">    
+</head>
+<body>
+  <div class="container">
+    <h2 id="propertyTitle">Property Reviews</h2>
+    <div id="reviewList"></div>
+
+    <h3>Leave a Review</h3>
+    <form id="reviewForm">
+      <div class="form-group">
+        <label>Rating (1 to 5):</label>
+        <select id="rating" required>
+          <option value="">Select rating</option>
+          <option value="1">⭐</option>
+          <option value="2">⭐⭐</option>
+          <option value="3">⭐⭐⭐</option>
+          <option value="4">⭐⭐⭐⭐</option>
+          <option value="5">⭐⭐⭐⭐⭐</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Comment:</label>
+        <textarea id="comment" rows="4" required></textarea>
+      </div>
+      <button class="btn-primary btn-large" type="submit">Submit Review</button>
+      <p id="message" class="success-message"></p>
+    </form>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams(window.location.search);
+    const propertyId = params.get('id');
+
+    if (!token || !propertyId) {
+      window.location.href = 'login.html';
+    }
+
+    async function loadReviews() {
+      const res = await fetch(`http://localhost:5000/reviews/${propertyId}`);
+      const reviews = await res.json();
+      const list = document.getElementById('reviewList');
+      list.innerHTML = reviews.length
+        ? reviews.map(r =>
+          `<div style="margin-bottom: 1rem;">
+            <strong>${r.reviewer_name}</strong>
+            <p>Rating: ${'⭐'.repeat(r.rating)}</p>
+            <p>${r.comment}</p>
+          </div>`).join('')
+        : "<p>No reviews yet.</p>";
+    }
+
+    document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const rating = document.getElementById('rating').value;
+      const comment = document.getElementById('comment').value;
+
+      const res = await fetch('http://localhost:5000/reviews', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ property_id: propertyId, rating, comment })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById('message').textContent = 'Review submitted!';
+        document.getElementById('reviewForm').reset();
+        loadReviews();
+      } else {
+        document.getElementById('message').textContent = data.message || 'Failed to submit review';
+      }
+    });
+
+    loadReviews();
+  </script>
+</body>
+</html>

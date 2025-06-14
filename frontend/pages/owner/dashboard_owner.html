@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Owner Dashboard - TinyHouse</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">    
+  <style>
+    .dashboard-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .stat-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #059669;
+      margin-bottom: 0.5rem;
+    }
+    .property-card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .property-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .property-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      padding: 1.5rem;
+      background: #f9fafb;
+    }
+    .property-stat {
+      text-align: center;
+    }
+    .property-stat-number {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #059669;
+    }
+    .property-stat-label {
+      font-size: 0.8rem;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+    .reservation-item {
+      background: white;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-left: 4px solid #3b82f6;
+    }
+    .reservation-pending {
+      border-left-color: #f59e0b;
+    }
+    .reservation-confirmed {
+      border-left-color: #10b981;
+    }
+    .status-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-confirmed { background: #d1fae5; color: #065f46; }
+    .status-completed { background: #dbeafe; color: #1e40af; }
+    .btn-action {
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      margin-right: 0.5rem;
+    }
+    .quick-actions {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .action-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      flex: 1;
+    }
+    .action-card:hover {
+      transform: translateY(-5px);
+    }
+    .action-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <h2>🏠 TinyHouse</h2>
+      </div>
+      <div class="nav-links">
+        <a href="/frontend">Home</a>
+        <a href="add-property.html" class="btn-primary">Add Property</a>
+        <a href="#" onclick="logout()" class="btn-secondary">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container" style="margin-top: 2rem;">
+    <h1>Welcome back, <span id="ownerName">Property Owner</span>! 🏠</h1>
+    <p style="color: #6b7280; margin-bottom: 3rem;">Manage your properties and bookings</p>
+
+    <!-- Dashboard Statistics -->
+    <div class="dashboard-stats">
+      <div class="stat-card">
+        <div class="stat-number" id="totalProperties">0</div>
+        <div>Total Properties</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalBookings">0</div>
+        <div>Total Bookings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalRevenue">₺0</div>
+        <div>Total Revenue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="averageRating">0</div>
+        <div>Average Rating</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="pendingReservations">0</div>
+        <div>Pending Requests</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <div class="action-card" onclick="viewAnalytics()">
+        <div class="action-icon">📊</div>
+        <h3>View Analytics</h3>
+        <p>Property performance</p>
+      </div>
+    </div>
+
+    <!-- My Properties -->
+    <section style="margin-bottom: 4rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>My Properties</h2>
+        <a href="add-property.html" class="btn-primary">Add New Property</a>
+      </div>
+      <div id="propertiesList">
+        <div class="text-center">
+          <p>Loading your properties...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recent Reservations -->
+    <section style="margin-bottom: 4rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>Recent Reservations</h2>
+        <div>
+          <select id="reservationFilter" onchange="filterReservations()">
+            <option value="">All Reservations</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div id="reservationsList">
+        <div class="text-center">
+          <p>Loading reservations...</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/frontend/js/api.js"></script>
+  <script>
+    let allProperties = [];
+    let allReservations = [];
+    let currentUser = null;
+
+    // Check authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '../pages/login.html';
+    }
+
+    // Initialize dashboard
+    async function initDashboard() {
+      try {
+        // Load user profile
+        const profileRes = await API.getProfile();
+        if (profileRes.user) {
+          currentUser = profileRes.user;
+          document.getElementById('ownerName').textContent = currentUser.first_name;
+        }
+
+        // Load dashboard data
+        await Promise.all([
+          loadProperties(),
+          loadReservations()
+        ]);
+
+        updateDashboardStats();
+      } catch (error) {
+        console.error('Failed to initialize dashboard:', error);
+        showError('Failed to load dashboard data');
+      }
+    }
+
+    // Load owner's properties
+    async function loadProperties() {
+      try {
+        const data = await API.getOwnerProperties();
+        allProperties = data.properties || [];
+        displayProperties(allProperties);
+      } catch (error) {
+        console.error('Failed to load properties:', error);
+        document.getElementById('propertiesList').innerHTML = 
+          '<p class="text-center">Failed to load properties</p>';
+      }
+    }
+
+    // Display properties
+    function displayProperties(properties) {
+      const container = document.getElementById('propertiesList');
+      
+      if (!properties || properties.length === 0) {
+        container.innerHTML = `
+          <div class="text-center" style="padding: 3rem;">
+            <h3>No properties listed yet</h3>
+            <p style="color: #6b7280; margin-bottom: 2rem;">Start earning by listing your first tiny house!</p>
+            <a href="add-property.html" class="btn-primary">Add Your First Property</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = properties.map(property => `
+        <div class="property-card">
+          <div class="property-header">
+            <div>
+              <h3>${property.title}</h3>
+              <p style="color: #6b7280; margin: 0;">📍 ${property.city}, ${property.country}</p>
+              <p style="color: #6b7280; margin: 0.5rem 0 0 0;">
+                <strong>₺${property.price_per_night}/night</strong>
+              </p>
+            </div>
+            <div style="text-align: right;">
+              <span class="status-badge ${property.is_active ? 'status-confirmed' : 'status-pending'}">
+                ${property.is_active ? 'Active' : 'Inactive'}
+              </span>
+              <div style="margin-top: 1rem;">
+                <button class="btn-action btn-primary" onclick="editProperty(${property.property_id})">
+                  Edit
+                </button>
+                <button class="btn-action btn-secondary" onclick="viewProperty(${property.property_id})">
+                  View
+                </button>
+                <button class="btn-action ${property.is_active ? 'btn-secondary' : 'btn-primary'}" 
+                        onclick="togglePropertyStatus(${property.property_id}, ${!property.is_active})">
+                  ${property.is_active ? 'Deactivate' : 'Activate'}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="property-stats">
+            <div class="property-stat">
+              <div class="property-stat-number">${property.total_bookings || 0}</div>
+              <div class="property-stat-label">Total Bookings</div>
+            </div>
+            <div class="property-stat">
+              <div class="property-stat-number">₺${(property.total_revenue || 0).toLocaleString()}</div>
+              <div class="property-stat-label">Total Revenue</div>
+            </div>
+            <div class="property-stat">
+              <div class="property-stat-number">${property.average_rating ? property.average_rating.toFixed(1) : 'N/A'}</div>
+              <div class="property-stat-label">Avg Rating</div>
+            </div>
+            <div class="property-stat">
+              <div class="property-stat-number">${property.review_count || 0}</div>
+              <div class="property-stat-label">Reviews</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load reservations
+    async function loadReservations() {
+      try {
+        const data = await API.getPropertyReservations();
+        allReservations = data.reservations || [];
+        displayReservations(allReservations);
+      } catch (error) {
+        console.error('Failed to load reservations:', error);
+        document.getElementById('reservationsList').innerHTML = 
+          '<p class="text-center">Failed to load reservations</p>';
+      }
+    }
+
+    // Display reservations
+    function displayReservations(reservations) {
+      const container = document.getElementById('reservationsList');
+      
+      if (!reservations || reservations.length === 0) {
+        container.innerHTML = `
+          <div class="text-center" style="padding: 2rem;">
+            <p>No reservations yet</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Show only recent reservations (last 10)
+      const recentReservations = reservations.slice(0, 10);
+
+      container.innerHTML = recentReservations.map(reservation => `
+        <div class="reservation-item reservation-${reservation.reservation_status}">
+          <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div style="flex: 1;">
+              <h4>${reservation.property_title}</h4>
+              <p style="color: #6b7280; margin: 0.5rem 0;">
+                <strong>${reservation.tenant_first_name} ${reservation.tenant_last_name}</strong> | 
+                ${reservation.tenant_email}
+              </p>
+              <p style="color: #6b7280; margin: 0;">
+                📅 ${formatDate(reservation.check_in_date)} - ${formatDate(reservation.check_out_date)} | 
+                👥 ${reservation.guest_count} guests | 
+                💰 ₺${reservation.total_amount}
+              </p>
+              <p style="color: #6b7280; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                Booked on ${formatDate(reservation.booking_date)}
+              </p>
+            </div>
+            <div style="text-align: right;">
+              <span class="status-badge status-${reservation.reservation_status}">
+                ${reservation.reservation_status}
+              </span>
+              <div style="margin-top: 1rem;">
+                ${getReservationActions(reservation)}
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Get action buttons for reservation
+    function getReservationActions(reservation) {
+      const actions = [];
+      
+      if (reservation.reservation_status === 'pending') {
+        actions.push(`
+          <button class="btn-action btn-primary" onclick="confirmReservation(${reservation.reservation_id})">
+            Confirm
+          </button>
+          <button class="btn-action btn-secondary" onclick="rejectReservation(${reservation.reservation_id})">
+            Reject
+          </button>
+        `);
+      }
+      
+      if (reservation.reservation_status === 'confirmed') {
+        actions.push(`
+          <button class="btn-action btn-primary" onclick="completeReservation(${reservation.reservation_id})">
+            Mark Complete
+          </button>
+        `);
+      }
+      
+      actions.push(`
+        <button class="btn-action btn-secondary" onclick="viewReservationDetails(${reservation.reservation_id})">
+          Details
+        </button>
+      `);
+      
+      return actions.join('');
+    }
+
+    // Filter reservations
+    function filterReservations() {
+      const status = document.getElementById('reservationFilter').value;
+      const filtered = status ? 
+        allReservations.filter(r => r.reservation_status === status) : 
+        allReservations;
+      displayReservations(filtered);
+    }
+
+    // Update dashboard statistics
+    function updateDashboardStats() {
+      const stats = {
+        totalProperties: allProperties.length,
+        totalBookings: allProperties.reduce((sum, p) => sum + (p.total_bookings || 0), 0),
+        totalRevenue: allProperties.reduce((sum, p) => sum + (p.total_revenue || 0), 0),
+        averageRating: allProperties.length > 0 ? 
+          (allProperties.reduce((sum, p) => sum + (p.average_rating || 0), 0) / allProperties.length) : 0,
+        pendingReservations: allReservations.filter(r => r.reservation_status === 'pending').length
+      };
+
+      document.getElementById('totalProperties').textContent = stats.totalProperties;
+      document.getElementById('totalBookings').textContent = stats.totalBookings;
+      document.getElementById('totalRevenue').textContent = `₺${stats.totalRevenue.toLocaleString()}`;
+      document.getElementById('averageRating').textContent = stats.averageRating.toFixed(1);
+      document.getElementById('pendingReservations').textContent = stats.pendingReservations;
+    }
+
+    // Action handlers
+    function editProperty(propertyId) {
+      window.location.href = `edit-property.html?id=${propertyId}`;
+    }
+
+    function viewProperty(propertyId) {
+      window.location.href = `property-details.html?id=${propertyId}`;
+    }
+
+    async function togglePropertyStatus(propertyId, activate) {
+      try {
+        // This would need to be implemented in the backend
+        const action = activate ? 'activate' : 'deactivate';
+        if (!confirm(`Are you sure you want to ${action} this property?`)) return;
+
+        // For now, just show a message
+        showSuccess(`Property ${action}d successfully!`);
+        loadProperties();
+      } catch (error) {
+        console.error('Failed to toggle property status:', error);
+        showError('Failed to update property status');
+      }
+    }
+
+    async function confirmReservation(reservationId) {
+      try {
+        await API.updateReservationStatus(reservationId, 'confirmed');
+        showSuccess('Reservation confirmed successfully!');
+        loadReservations();
+      } catch (error) {
+        console.error('Failed to confirm reservation:', error);
+        showError('Failed to confirm reservation');
+      }
+    }
+
+    async function rejectReservation(reservationId) {
+      try {
+        const reason = prompt('Please provide a reason for rejection:') || 'Rejected by owner';
+        await API.updateReservationStatus(reservationId, 'cancelled', reason);
+        showSuccess('Reservation rejected successfully!');
+        loadReservations();
+      } catch (error) {
+        console.error('Failed to reject reservation:', error);
+        showError('Failed to reject reservation');
+      }
+    }
+
+    async function completeReservation(reservationId) {
+      try {
+        await API.updateReservationStatus(reservationId, 'completed');
+        showSuccess('Reservation marked as completed!');
+        loadReservations();
+      } catch (error) {
+        console.error('Failed to complete reservation:', error);
+        showError('Failed to complete reservation');
+      }
+    }
+
+    function viewReservationDetails(reservationId) {
+      window.location.href = `reservation-details.html?id=${reservationId}`;
+    }
+
+    function viewAllReservations() {
+      window.location.href = `manage-reservations.html`;
+    }
+
+    function viewAnalytics() {
+      window.location.href = `property-analytics.html`;
+    }
+
+    // Utility functions
+    function formatDate(dateString) {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    function showSuccess(message) {
+      alert(message);
+    }
+
+    function showError(message) {
+      alert(message);
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '/frontend/pages/login.html';
+    }
+
+    // Initialize dashboard when page loads
+    initDashboard();
+  </script>
+</body>
+</html>

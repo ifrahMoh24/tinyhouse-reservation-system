@@ -1,0 +1,65 @@
+<!-- html-frontend/pages/register.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register - TinyHouse</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">    
+</head>
+<body>
+  <div class="form-container">
+    <h2>Register</h2>
+    <form id="registerForm">
+      <!-- First Name -->
+      <div class="form-group">
+        <label>First Name</label>
+        <input type="text" id="firstName" placeholder="First Name" required />
+      </div>
+      
+      <!-- Last Name -->
+      <div class="form-group">
+        <label>Last Name</label>
+        <input type="text" id="lastName" placeholder="Last Name" required />
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="you@example.com" required />
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••" required />
+      </div>
+
+      <!-- Phone (optional) -->
+      <div class="form-group">
+        <label>Phone (optional)</label>
+        <input type="text" id="phone" placeholder="+90 555 123 4567" />
+      </div>
+
+      <!-- Role (in English, but shown as Turkish labels) -->
+      <div class="form-group">
+        <label>Role</label>
+        <select id="role" required>
+          <!-- Backend expects exactly “tenant” or “owner” -->
+          <option value="tenant">Tent</option>
+          <option value="owner">Owner</option>
+        </select>
+      </div>
+
+      <!-- Submit Button -->
+      <button class="btn-secondary btn-large" type="submit">Register</button>
+
+      <!-- Error Message -->
+      <p id="errorMsg" class="error-message"></p>
+    </form>
+  </div>
+
+  <!-- Include your updated auth.js below -->
+  <script src="../js/auth.js"></script>
+</body>
+</html>

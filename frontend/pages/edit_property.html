@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Property - TinyHouse</title>
+  <link rel="stylesheet" href="../css/style.css">    
+  <style>
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .form-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .form-header h2 {
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-header p {
+      color: #666;
+      margin: 0;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group-full {
+      grid-column: 1 / -1;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .form-group input, 
+    .form-group select, 
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus, 
+    .form-group select:focus, 
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: #3498db;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2980b9;
+    }
+
+    .btn-secondary {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #7f8c8d;
+    }
+
+    .message {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      text-align: center;
+      display: none;
+    }
+
+    .success-message {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .error-message {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .loading {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .btn-group {
+        flex-direction: column;
+      }
+      
+      .container {
+        margin: 1rem;
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form-header">
+      <h2>Edit Property</h2>
+      <p>Update your property information</p>
+    </div>
+
+    <div id="loading" class="loading">Loading property details...</div>
+
+    <form id="editForm" style="display: none;">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="title">Property Title *</label>
+          <input type="text" id="title" required placeholder="e.g., Cozy Mountain Retreat" />
+        </div>
+
+        <div class="form-group">
+          <label for="price_per_night">Price per Night (₺) *</label>
+          <input type="number" id="price_per_night" required min="1" placeholder="150" />
+        </div>
+
+        <div class="form-group">
+          <label for="city">City *</label>
+          <input type="text" id="city" required placeholder="e.g., Antalya" />
+        </div>
+
+        <div class="form-group">
+          <label for="country">Country *</label>
+          <input type="text" id="country" required placeholder="e.g., Turkey" />
+        </div>
+
+        <div class="form-group">
+          <label for="max_guests">Max Guests *</label>
+          <select id="max_guests" required>
+            <option value="">Select max guests</option>
+            <option value="1">1 Guest</option>
+            <option value="2">2 Guests</option>
+            <option value="3">3 Guests</option>
+            <option value="4">4 Guests</option>
+            <option value="5">5 Guests</option>
+            <option value="6">6 Guests</option>
+            <option value="8">8 Guests</option>
+            <option value="10">10 Guests</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="bedrooms">Bedrooms</label>
+          <select id="bedrooms">
+            <option value="1">1 Bedroom</option>
+            <option value="2">2 Bedrooms</option>
+            <option value="3">3 Bedrooms</option>
+            <option value="4">4 Bedrooms</option>
+            <option value="5">5+ Bedrooms</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="bathrooms">Bathrooms</label>
+          <select id="bathrooms">
+            <option value="1">1 Bathroom</option>
+            <option value="1.5">1.5 Bathrooms</option>
+            <option value="2">2 Bathrooms</option>
+            <option value="2.5">2.5 Bathrooms</option>
+            <option value="3">3+ Bathrooms</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="cleaning_fee">Cleaning Fee (₺)</label>
+          <input type="number" id="cleaning_fee" min="0" placeholder="50" />
+        </div>
+      </div>
+
+      <div class="form-group-full">
+        <div class="form-group">
+          <label for="address">Full Address *</label>
+          <input type="text" id="address" required placeholder="Full street address" />
+        </div>
+      </div>
+
+      <div class="form-group-full">
+        <div class="form-group">
+          <label for="description">Description *</label>
+          <textarea id="description" rows="5" required placeholder="Describe your property, amenities, and what makes it special..."></textarea>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="is_active">Status *</label>
+          <select id="is_active" required>
+            <option value="1">Active (Available for booking)</option>
+            <option value="0">Inactive (Not available)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button type="button" class="btn btn-secondary" onclick="goBack()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+
+      <div id="message" class="message"></div>
+    </form>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const params = new URLSearchParams(window.location.search);
+    const propertyId = params.get('id');
+
+    // Check authentication and property ID
+    if (!token) {
+      alert('Please login first');
+      window.location.href = 'login.html';
+    }
+
+    if (!propertyId) {
+      alert('Property ID is required');
+      window.location.href = 'properties.html';
+    }
+
+    // Load property data
+    async function loadProperty() {
+      try {
+        const response = await fetch(`http://localhost:3001/properties/${propertyId}`, {
+          method: 'GET',
+          headers: { 
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to load property: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const property = data.property || data;
+
+        // Populate form fields with correct database field names
+        document.getElementById('title').value = property.title || '';
+        document.getElementById('price_per_night').value = property.price_per_night || '';
+        document.getElementById('city').value = property.city || '';
+        document.getElementById('country').value = property.country || '';
+        document.getElementById('max_guests').value = property.max_guests || '';
+        document.getElementById('bedrooms').value = property.bedrooms || '1';
+        document.getElementById('bathrooms').value = property.bathrooms || '1';
+        document.getElementById('cleaning_fee').value = property.cleaning_fee || '';
+        document.getElementById('address').value = property.address || '';
+        document.getElementById('description').value = property.description || '';
+        document.getElementById('is_active').value = property.is_active ? '1' : '0';
+
+        // Hide loading and show form
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('editForm').style.display = 'block';
+
+      } catch (error) {
+        console.error('Load property error:', error);
+        showMessage('Failed to load property details: ' + error.message, 'error');
+        document.getElementById('loading').textContent = 'Failed to load property';
+      }
+    }
+
+    // Handle form submission
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = 'Saving...';
+      submitBtn.disabled = true;
+
+      try {
+        // Prepare data with correct field names matching database schema
+        const formData = {
+          title: document.getElementById('title').value.trim(),
+          price_per_night: parseFloat(document.getElementById('price_per_night').value),
+          city: document.getElementById('city').value.trim(),
+          country: document.getElementById('country').value.trim(),
+          max_guests: parseInt(document.getElementById('max_guests').value),
+          bedrooms: parseInt(document.getElementById('bedrooms').value),
+          bathrooms: parseFloat(document.getElementById('bathrooms').value),
+          cleaning_fee: parseFloat(document.getElementById('cleaning_fee').value) || 0,
+          address: document.getElementById('address').value.trim(),
+          description: document.getElementById('description').value.trim(),
+          is_active: document.getElementById('is_active').value === '1'
+        };
+
+        // Validate required fields
+        if (!formData.title || !formData.city || !formData.country || !formData.address || !formData.description) {
+          throw new Error('Please fill in all required fields');
+        }
+
+        if (formData.price_per_night <= 0) {
+          throw new Error('Price per night must be greater than 0');
+        }
+
+        if (formData.max_guests <= 0) {
+          throw new Error('Max guests must be greater than 0');
+        }
+
+        console.log('Sending update data:', formData);
+
+        const response = await fetch(`http://localhost:3001/properties/${propertyId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showMessage('Property updated successfully! 🎉', 'success');
+          // Optionally redirect after a delay
+          setTimeout(() => {
+            window.location.href = 'properties.html';
+          }, 2000);
+        } else {
+          throw new Error(result.message || 'Failed to update property');
+        }
+
+      } catch (error) {
+        console.error('Update error:', error);
+        showMessage('Update failed: ' + error.message, 'error');
+      } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Utility functions
+    function showMessage(message, type) {
+      const messageEl = document.getElementById('message');
+      messageEl.textContent = message;
+      messageEl.className = 'message ' + (type === 'success' ? 'success-message' : 'error-message');
+      messageEl.style.display = 'block';
+      
+      // Auto hide after 5 seconds
+      setTimeout(() => {
+        messageEl.style.display = 'none';
+      }, 5000);
+    }
+
+    function goBack() {
+      if (confirm('Are you sure? Any unsaved changes will be lost.')) {
+        window.location.href = 'properties.html';
+      }
+    }
+
+    // Initialize
+    loadProperty();
+  </script>
+</body>
+</html>

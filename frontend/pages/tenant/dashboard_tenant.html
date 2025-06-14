@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tenant Dashboard - TinyHouse</title>
+  <link rel="stylesheet" href="/frontend/css/style.css" />
+  <style>
+    .dashboard-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .stat-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #3b82f6;
+      margin-bottom: 0.5rem;
+    }
+    .reservation-card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .reservation-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .reservation-content {
+      padding: 1.5rem;
+    }
+    .status-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-confirmed { background: #d1fae5; color: #065f46; }
+    .status-completed { background: #dbeafe; color: #1e40af; }
+    .status-cancelled { background: #fee2e2; color: #991b1b; }
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .btn-small {
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      border-radius: 6px;
+    }
+    .property-search {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    .property-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <h2>🏠 TinyHouse</h2>
+      </div>
+      <div class="nav-links">
+        <a href="../index.html">Home</a>
+        <a href="properties.html">Browse Properties</a>
+        <a href="#" onclick="logout()" class="btn-secondary">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container" style="margin-top: 2rem;">
+    <h1>Welcome back, <span id="userName">Tenant</span>! 🎉</h1>
+    <p style="color: #6b7280; margin-bottom: 3rem;">Manage your reservations and discover new properties</p>
+
+    <!-- Dashboard Statistics -->
+    <div class="dashboard-stats">
+      <div class="stat-card">
+        <div class="stat-number" id="totalReservations">0</div>
+        <div>Total Bookings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="upcomingReservations">0</div>
+        <div>Upcoming Trips</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalSpent">₺0</div>
+        <div>Total Spent</div>
+      </div>
+    </div>
+
+    <!-- My Reservations -->
+    <section style="margin-bottom: 4rem;">
+      <h2>My Reservations</h2>
+      <div class="form-group" style="max-width: 200px; margin-bottom: 2rem;">
+        <select id="statusFilter" onchange="filterReservations()">
+          <option value="">All Reservations</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div id="reservationsList">
+        <div class="text-center">
+          <p>Loading your reservations...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Property Search -->
+    <section style="margin-bottom: 4rem;">
+      <h2>Discover New Properties</h2>
+      <div class="property-search">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="searchLocation" placeholder="Where do you want to go?">
+          </div>
+          <div class="form-group">
+            <label>Check-in</label>
+            <input type="date" id="searchCheckIn">
+          </div>
+          <div class="form-group">
+            <label>Check-out</label>
+            <input type="date" id="searchCheckOut">
+          </div>
+          <div class="form-group">
+            <label>Guests</label>
+            <select id="searchGuests">
+              <option value="1">1 Guest</option>
+              <option value="2">2 Guests</option>
+              <option value="3">3 Guests</option>
+              <option value="4">4 Guests</option>
+              <option value="5">5+ Guests</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="searchProperties()">Search Properties</button>
+      </div>
+      <div id="propertiesList" class="property-grid">
+        <!-- Properties will be loaded here -->
+      </div>
+    </section>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/frontend/js/api.js"></script>
+  <script>
+    let allReservations = [];
+    let currentUser = null;
+
+    // Check authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '../pages/login.html';
+    }
+
+    // Initialize dashboard
+    async function initDashboard() {
+      try {
+        // Load user profile
+        const profileRes = await API.getProfile();
+        if (profileRes.user) {
+          currentUser = profileRes.user;
+          document.getElementById('userName').textContent = currentUser.first_name;
+        }
+
+        // Load dashboard data
+        await Promise.all([
+          loadReservations(),
+          loadFeaturedProperties(),
+          loadDashboardStats()
+        ]);
+      } catch (error) {
+        console.error('Failed to initialize dashboard:', error);
+        showError('Failed to load dashboard data');
+      }
+    }
+
+    // Load reservations
+    async function loadReservations() {
+      try {
+        const data = await API.getMyReservations();
+        allReservations = data.reservations || [];
+        displayReservations(allReservations);
+      } catch (error) {
+        console.error('Failed to load reservations:', error);
+        document.getElementById('reservationsList').innerHTML = 
+          '<p class="text-center">Failed to load reservations</p>';
+      }
+    }
+
+    // Display reservations
+    function displayReservations(reservations) {
+      const container = document.getElementById('reservationsList');
+      
+      if (!reservations || reservations.length === 0) {
+        container.innerHTML = `
+          <div class="text-center" style="padding: 3rem;">
+            <h3>No reservations yet</h3>
+            <p style="color: #6b7280; margin-bottom: 2rem;">Start exploring amazing tiny houses!</p>
+            <a href="properties.html" class="btn-primary">Browse Properties</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = reservations.map(reservation => `
+        <div class="reservation-card">
+          <div class="reservation-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <h3>${reservation.property_title}</h3>
+              <span class="status-badge status-${reservation.reservation_status}">
+                ${reservation.reservation_status}
+              </span>
+            </div>
+            <p style="color: #6b7280; margin: 0.5rem 0;">
+              📍 ${reservation.city} | ${formatDate(reservation.check_in_date)} - ${formatDate(reservation.check_out_date)}
+            </p>
+            <p style="color: #6b7280; margin: 0;">
+              👥 ${reservation.guest_count} guests | ${reservation.total_nights} nights
+            </p>
+          </div>
+          <div class="reservation-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <p><strong>Total: ₺${reservation.total_amount}</strong></p>
+                <p style="color: #6b7280; font-size: 0.9rem;">
+                  Booked on ${formatDate(reservation.booking_date)}
+                </p>
+              </div>
+              <div class="action-buttons">
+                ${getReservationActions(reservation)}
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Get action buttons for reservation
+    function getReservationActions(reservation) {
+      const actions = [];
+      
+      if (reservation.reservation_status === 'pending') {
+        actions.push(`
+          <button class="btn-secondary btn-small" onclick="cancelReservation(${reservation.reservation_id})">
+            Cancel
+          </button>
+        `);
+      }
+      
+      if (reservation.reservation_status === 'confirmed') {
+        actions.push(`
+          <button class="btn-primary btn-small" onclick="makePayment(${reservation.reservation_id})">
+            Pay Now
+          </button>
+        `);
+      }
+      
+      if (reservation.reservation_status === 'completed') {
+        actions.push(`
+          <button class="btn-primary btn-small" onclick="writeReview(${reservation.reservation_id}, ${reservation.property_id})">
+            Write Review
+          </button>
+        `);
+      }
+      
+      actions.push(`
+        <button class="btn-secondary btn-small" onclick="viewReservation(${reservation.reservation_id})">
+          View Details
+        </button>
+      `);
+      
+      return actions.join('');
+    }
+
+    // Filter reservations
+    function filterReservations() {
+      const status = document.getElementById('statusFilter').value;
+      const filtered = status ? 
+        allReservations.filter(r => r.reservation_status === status) : 
+        allReservations;
+      displayReservations(filtered);
+    }
+
+    // Load featured properties
+    async function loadFeaturedProperties() {
+      try {
+        const data = await API.getProperties({ limit: 6 });
+        displayProperties(data.properties || []);
+      } catch (error) {
+        console.error('Failed to load properties:', error);
+      }
+    }
+
+    // Display properties
+    function displayProperties(properties) {
+      const container = document.getElementById('propertiesList');
+      
+      if (!properties || properties.length === 0) {
+        container.innerHTML = '<p class="text-center">No properties found</p>';
+        return;
+      }
+
+      container.innerHTML = properties.map(property => `
+        <div class="property-card" onclick="viewProperty(${property.property_id})">
+          <div class="property-image">
+            <img src="${property.images?.[0]?.image_url || 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=400'}" 
+                 alt="${property.title}">
+            <div class="property-price">₺${property.price_per_night}/night</div>
+          </div>
+          <div class="property-info">
+            <h3>${property.title}</h3>
+            <p class="property-location">📍 ${property.city}, ${property.country}</p>
+            <div class="property-rating">
+              <span class="stars">${'⭐'.repeat(Math.round(property.average_rating || 0))}</span>
+              <span>${property.average_rating ? property.average_rating.toFixed(1) : 'New'} (${property.review_count || 0} reviews)</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Search properties
+    async function searchProperties() {
+      try {
+        const filters = {
+          city: document.getElementById('searchLocation').value,
+          checkIn: document.getElementById('searchCheckIn').value,
+          checkOut: document.getElementById('searchCheckOut').value,
+          maxGuests: document.getElementById('searchGuests').value
+        };
+
+        // Remove empty filters
+        Object.keys(filters).forEach(key => {
+          if (!filters[key]) delete filters[key];
+        });
+
+        const data = await API.getProperties(filters);
+        displayProperties(data.properties || []);
+      } catch (error) {
+        console.error('Search failed:', error);
+        showError('Search failed. Please try again.');
+      }
+    }
+
+    // Load dashboard statistics
+    async function loadDashboardStats() {
+      try {
+        const stats = {
+          totalReservations: allReservations.length,
+          upcomingReservations: allReservations.filter(r => 
+            r.reservation_status === 'confirmed' && new Date(r.check_in_date) > new Date()
+          ).length,
+          totalSpent: allReservations
+            .filter(r => r.reservation_status === 'completed')
+            .reduce((sum, r) => sum + parseFloat(r.total_amount || 0), 0)
+        };
+
+        document.getElementById('totalReservations').textContent = stats.totalReservations;
+        document.getElementById('upcomingReservations').textContent = stats.upcomingReservations;
+        document.getElementById('totalSpent').textContent = `₺${stats.totalSpent.toFixed(2)}`;
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    }
+
+    // Action handlers
+    async function cancelReservation(reservationId) {
+      if (!confirm('Are you sure you want to cancel this reservation?')) return;
+      
+      try {
+        const reason = prompt('Please provide a reason for cancellation (optional):') || 'Cancelled by guest';
+        await API.updateReservationStatus(reservationId, 'cancelled', reason);
+        showSuccess('Reservation cancelled successfully');
+        loadReservations();
+      } catch (error) {
+        console.error('Failed to cancel reservation:', error);
+        showError('Failed to cancel reservation');
+      }
+    }
+
+    async function makePayment(reservationId) {
+      try {
+        const paymentMethod = prompt('Select payment method:\n1. Credit Card\n2. Bank Transfer\n3. PayPal\nEnter 1, 2, or 3:');
+        const methods = { '1': 'credit_card', '2': 'bank_transfer', '3': 'paypal' };
+        
+        if (!methods[paymentMethod]) {
+          showError('Invalid payment method');
+          return;
+        }
+
+        await API.createPayment({
+          reservationId: reservationId,
+          paymentMethod: methods[paymentMethod]
+        });
+        
+        showSuccess('Payment processed successfully!');
+        loadReservations();
+      } catch (error) {
+        console.error('Payment failed:', error);
+        showError('Payment failed. Please try again.');
+      }
+    }
+
+    function writeReview(reservationId, propertyId) {
+      window.location.href = `write-review.html?reservationId=${reservationId}&propertyId=${propertyId}`;
+    }
+
+    function viewReservation(reservationId) {
+      window.location.href = `reservation-details.html?id=${reservationId}`;
+    }
+
+    function viewProperty(propertyId) {
+      window.location.href = `property-details.html?id=${propertyId}`;
+    }
+
+    // Utility functions
+    function formatDate(dateString) {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    function showSuccess(message) {
+      // Simple alert for now - could be replaced with a toast notification
+      alert(message);
+    }
+
+    function showError(message) {
+      // Simple alert for now - could be replaced with a toast notification
+      alert(message);
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = '../pages/login.html';
+    }
+
+    // Set minimum dates for search
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('searchCheckIn').min = today;
+      document.getElementById('searchCheckOut').min = today;
+      
+      // Update checkout min date when checkin changes
+      document.getElementById('searchCheckIn').addEventListener('change', (e) => {
+        const checkinDate = new Date(e.target.value);
+        checkinDate.setDate(checkinDate.getDate() + 1);
+        document.getElementById('searchCheckOut').min = checkinDate.toISOString().split('T')[0];
+      });
+    });
+
+    // Initialize dashboard when page loads
+    initDashboard();
+  </script>
+</body>
+</html>

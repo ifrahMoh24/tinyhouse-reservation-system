@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Reports - TinyHouse</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">    
+</head>
+<body>
+  <div class="container">
+    <!-- Logout Button -->
+    <button onclick="logout()" class="btn-secondary" style="float: right; margin-top: 1rem;">Logout</button>
+
+    <h2>📈 System Overview</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <h3>Total Users</h3>
+        <p id="userCount">...</p>
+      </div>
+      <div class="feature-card">
+        <h3>Total Reservations</h3>
+        <p id="reservationCount">...</p>
+      </div>
+      <div class="feature-card">
+        <h3>Total Revenue</h3>
+        <p id="totalRevenue">...</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 3rem;">⭐ Top Rated Properties</h3>
+    <div id="topProperties"></div>
+  </div>
+
+  <!-- Logout Script -->
+  <script src="/frontend/js/logout.js"></script>
+
+  <!-- Stats + Properties Loading Script -->
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    async function loadStats() {
+      const res = await fetch('http://localhost:3001/admin/stats', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const stats = await res.json();
+      document.getElementById('userCount').textContent = stats.user_count;
+      document.getElementById('reservationCount').textContent = stats.reservation_count;
+      document.getElementById('totalRevenue').textContent = '₺' + stats.total_revenue;
+    }
+
+    async function loadTopProperties() {
+      const res = await fetch('http://localhost:3001/admin/top-properties', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+      const container = document.getElementById('topProperties');
+      container.innerHTML = data.map(p =>
+        `<div class="property-card" style="margin-bottom: 2rem;">
+          <div class="property-info">
+            <h4>${p.name}</h4>
+            <p>${p.location}</p>
+            <p>Average Rating: ⭐ ${p.avg_rating} (${p.review_count} reviews)</p>
+          </div>
+        </div>`
+      ).join('');
+    }
+
+    loadStats();
+    loadTopProperties();
+  </script>
+</body>
+</html>

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add New Property - TinyHouse</title>
+  <link rel="stylesheet" href="/frontend/css/style.css">    
+  <style>
+    .form-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .form-header {
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+    .form-content {
+      padding: 2rem;
+    }
+    .form-section {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .form-section:last-child {
+      border-bottom: none;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+    }
+    .section-icon {
+      margin-right: 0.5rem;
+      font-size: 1.5rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .error-message {
+      color: #ef4444;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #fef2f2;
+      border-radius: 8px;
+      display: none;
+    }
+    .success-message {
+      color: #059669;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #f0fdf4;
+      border-radius: 8px;
+      display: none;
+    }
+    .btn-large {
+      width: 100%;
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-brand">
+        <h2>🏠 TinyHouse</h2>
+      </div>
+      <div class="nav-links">
+        <a href="/frontend">Home</a>
+        <a href="/frontend/pages/owner/dashboard_owner.html">Dashboard</a>
+        <a href="#" onclick="logout()" class="btn-secondary">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="form-container">
+      <div class="form-header">
+        <h1>🏠 List Your Tiny House</h1>
+        <p>Share your unique space with travelers around the world</p>
+      </div>
+
+      <div class="form-content">
+        <form id="propertyForm">
+          <!-- Basic Information -->
+          <div class="form-section">
+            <div class="section-title">
+              <span class="section-icon">📝</span>
+              Basic Information
+            </div>
+            
+            <div class="form-group">
+              <label for="title">Property Title *</label>
+              <input type="text" id="title" name="title" required 
+                     placeholder="e.g., Cozy Mountain Retreat">
+            </div>
+
+            <div class="form-group">
+              <label for="description">Description</label>
+              <textarea id="description" name="description" rows="4" 
+                        placeholder="Describe your property, what makes it special, and what guests can expect..."></textarea>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="address">Street Address *</label>
+                <input type="text" id="address" name="address" required 
+                       placeholder="123 Mountain View Road">
+              </div>
+              <div class="form-group">
+                <label for="city">City *</label>
+                <input type="text" id="city" name="city" required 
+                       placeholder="Antalya">
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="country">Country</label>
+                <select id="country" name="country">
+                  <option value="Turkey">Turkey</option>
+                  <option value="Greece">Greece</option>
+                  <option value="Italy">Italy</option>
+                  <option value="Spain">Spain</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="pricePerNight">Price per Night (₺) *</label>
+                <input type="number" id="pricePerNight" name="pricePerNight" required 
+                       min="50" placeholder="150">
+              </div>
+            </div>
+          </div>
+
+          <!-- Property Details -->
+          <div class="form-section">
+            <div class="section-title">
+              <span class="section-icon">🏠</span>
+              Property Details
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="maxGuests">Maximum Guests *</label>
+                <select id="maxGuests" name="maxGuests" required>
+                  <option value="">Select...</option>
+                  <option value="1">1 Guest</option>
+                  <option value="2">2 Guests</option>
+                  <option value="3">3 Guests</option>
+                  <option value="4">4 Guests</option>
+                  <option value="5">5 Guests</option>
+                  <option value="6">6+ Guests</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="bedrooms">Bedrooms *</label>
+                <select id="bedrooms" name="bedrooms" required>
+                  <option value="">Select...</option>
+                  <option value="1">1 Bedroom</option>
+                  <option value="2">2 Bedrooms</option>
+                  <option value="3">3 Bedrooms</option>
+                  <option value="4">4+ Bedrooms</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="bathrooms">Bathrooms *</label>
+                <select id="bathrooms" name="bathrooms" required>
+                  <option value="">Select...</option>
+                  <option value="1">1 Bathroom</option>
+                  <option value="2">2 Bathrooms</option>
+                  <option value="3">3+ Bathrooms</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="cleaningFee">Cleaning Fee (₺)</label>
+                <input type="number" id="cleaningFee" name="cleaningFee" 
+                       min="0" placeholder="50">
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="latitude">Latitude (optional)</label>
+                <input type="number" id="latitude" name="latitude" 
+                       step="any" placeholder="36.8969">
+              </div>
+              <div class="form-group">
+                <label for="longitude">Longitude (optional)</label>
+                <input type="number" id="longitude" name="longitude" 
+                       step="any" placeholder="30.7133">
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div style="text-align: center;">
+            <button type="submit" class="btn-primary btn-large">
+              List Property
+            </button>
+          </div>
+
+          <!-- Messages -->
+          <div id="errorMsg" class="error-message"></div>
+          <div id="successMsg" class="success-message"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/frontend/js/api.js"></script>
+  <script>
+    // Check authentication
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/frontend/pages/login.html';
+    }
+
+    // Form submission
+    document.getElementById('propertyForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = document.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating Property...';
+
+      // Clear messages
+      document.getElementById('errorMsg').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'none';
+
+      try {
+        // Get form data
+        const formData = {
+          title: document.getElementById('title').value,
+          description: document.getElementById('description').value,
+          address: document.getElementById('address').value,
+          city: document.getElementById('city').value,
+          country: document.getElementById('country').value,
+          pricePerNight: parseFloat(document.getElementById('pricePerNight').value),
+          maxGuests: parseInt(document.getElementById('maxGuests').value),
+          bedrooms: parseInt(document.getElementById('bedrooms').value),
+          bathrooms: parseInt(document.getElementById('bathrooms').value),
+          cleaningFee: parseFloat(document.getElementById('cleaningFee').value) || 0,
+          latitude: parseFloat(document.getElementById('latitude').value) || null,
+          longitude: parseFloat(document.getElementById('longitude').value) || null
+        };
+
+        // Validate required fields
+        const requiredFields = ['title', 'address', 'city', 'pricePerNight', 'maxGuests', 'bedrooms', 'bathrooms'];
+        for (const field of requiredFields) {
+          if (!formData[field]) {
+            throw new Error(`${field} is required`);
+          }
+        }
+
+        if (formData.pricePerNight < 50) {
+          throw new Error('Minimum price per night is ₺50');
+        }
+
+        // Send to API
+        const response = await fetch('http://localhost:3001/properties', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          document.getElementById('successMsg').textContent = 'Property listed successfully! Redirecting to dashboard...';
+          document.getElementById('successMsg').style.display = 'block';
+          
+          setTimeout(() => {
+            window.location.href = '/frontend/pages/owner/dashboard_owner.html';
+          }, 2000);
+        } else {
+          throw new Error(result.message || 'Failed to create property');
+        }
+
+      } catch (error) {
+        console.error('Error creating property:', error);
+        document.getElementById('errorMsg').textContent = error.message;
+        document.getElementById('errorMsg').style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+
+    // Auto-fill coordinates based on city
+    document.getElementById('city').addEventListener('blur', () => {
+      const city = document.getElementById('city').value.toLowerCase();
+      if (city && !document.getElementById('latitude').value) {
+        const cityCoordinates = {
+          'istanbul': { lat: 41.0082, lng: 28.9784 },
+          'ankara': { lat: 39.9334, lng: 32.8597 },
+          'izmir': { lat: 38.4192, lng: 27.1287 },
+          'antalya': { lat: 36.8969, lng: 30.7133 },
+          'bursa': { lat: 40.1926, lng: 29.0616 },
+          'adana': { lat: 37.0000, lng: 35.3213 }
+        };
+
+        const coords = cityCoordinates[city];
+        if (coords) {
+          document.getElementById('latitude').value = coords.lat;
+          document.getElementById('longitude').value = coords.lng;
+        }
+      }
+    });
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/frontend/pages/login.html';
+    }
+  </script>
+</body>
+</html>
